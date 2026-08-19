@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Professional E-Commerce Login System (Flask + MySQL)
 
 This project implements a responsive OTP-based login flow using:
@@ -79,3 +80,6 @@ App URL: `http://127.0.0.1:5000`
 - Parameterized SQL queries prevent SQL injection.
 - Session is required to access profile/home routes.
 - Set a strong `SECRET_KEY` in production and use HTTPS.
+=======
+# Ecommerence-website
+>>>>>>> 445643456c30de19a1c3cbef934d69f76d8976b8
