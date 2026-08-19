@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Order Confirmed | TechTrend{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 4rem 1.5rem; max-width: 720px;">
+  <div style="background: var(--bg-card); border: 1px solid var(--border-brand); border-radius: var(--radius-lg); padding: 3rem; text-align: center; box-shadow: var(--shadow-lg);">
+    
+    <!-- Success Icon -->
+    <div style="width: 84px; height: 84px; border-radius: 50%; background: rgba(16, 185, 129, 0.15); color: var(--color-success); display: inline-flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 1.5rem; filter: drop-shadow(0 0 16px rgba(16, 185, 129, 0.4));">
+      <i class="bi bi-check-circle-fill"></i>
+    </div>
+
+    <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 0.4rem;">Order Placed Successfully!</h1>
+    <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 2rem;">
+      Thank you for shopping with TechTrend. Your order is confirmed and being prepared for shipment.
+    </p>
+
+    <!-- Order Summary Badge Block -->
+    <div style="background: var(--bg-input); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1.5rem; text-align: left; margin-bottom: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 1rem; margin-bottom: 1rem;">
+        <div>
+          <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">ORDER REFERENCE NUMBER</div>
+          <div style="font-size: 1.2rem; font-weight: 800; color: var(--color-accent);">{{ order.order_number }}</div>
+        </div>
+        <span class="product-badge" style="background: var(--color-brand); font-size: 0.85rem; padding: 0.35rem 0.8rem;">Status: {{ order.status }}</span>
+      </div>
+
+      <!-- Items List -->
+      <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.25rem;">
+        {% for item in order.order_items %}
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <img src="{{ item.primary_image }}" alt="{{ item.name }}" style="width: 44px; height: 44px; object-fit: cover; border-radius: var(--radius-sm);">
+            <div>
+              <div style="font-weight: 700; color: var(--text-main);">{{ item.name }}</div>
+              <div style="font-size: 0.8rem; color: var(--text-dim);">Qty: {{ item.quantity }}x</div>
+            </div>
+          </div>
+          <div style="font-weight: 700; color: var(--text-main);">₹{{ "{:,.2f}".format(item.total_price) }}</div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div style="border-top: 1px dashed var(--border-light); padding-top: 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.88rem;">
+        <div>
+          <div style="color: var(--text-dim); font-size: 0.78rem; font-weight: 700;">SHIPPING ADDRESS</div>
+          <div style="color: var(--text-main); font-weight: 600; margin-top: 0.2rem;">
+            {{ order.address_name }}<br>
+            {{ order.address_line }}, {{ order.city }} - {{ order.pincode }}
+          </div>
+        </div>
+
+        <div>
+          <div style="color: var(--text-dim); font-size: 0.78rem; font-weight: 700;">PAYMENT METHOD</div>
+          <div style="color: var(--text-main); font-weight: 600; margin-top: 0.2rem;">
+            {{ order.payment_method }} ({{ order.payment_status }})<br>
+            Ref: {{ order.transaction_ref }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estimated Delivery -->
+    <div style="background: rgba(6, 182, 212, 0.1); border: 1px solid var(--color-accent); border-radius: var(--radius-md); padding: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem; color: var(--color-accent); font-weight: 700; font-size: 0.95rem; margin-bottom: 2rem;">
+      <i class="bi bi-truck-front-fill" style="font-size: 1.4rem;"></i>
+      <span>Estimated Delivery: Within 3 to 5 Business Days</span>
+    </div>
+
+    <!-- Actions -->
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+      <a href="{{ url_for('order.my_orders_page') }}" class="btn btn-primary">
+        <i class="bi bi-box-seam"></i> Track Order Status
+      </a>
+      <a href="{{ url_for('product.products_page') }}" class="btn btn-outline">
+        Continue Shopping
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

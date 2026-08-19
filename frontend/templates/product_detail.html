@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} | TechTrend Store{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 3rem 1.5rem;">
+  
+  <!-- Breadcrumb -->
+  <div style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem;">
+    <a href="{{ url_for('product.home_page') }}" style="color: var(--text-muted);">Home</a>
+    <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+    <a href="{{ url_for('product.category_products_page', slug=product.category_slug) }}" style="color: var(--text-muted);">{{ product.category_name }}</a>
+    <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+    <span style="color: var(--text-main); font-weight: 600;">{{ product.name }}</span>
+  </div>
+
+  <!-- Product Main Section -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3.5rem; margin-bottom: 4rem;">
+    
+    <!-- Gallery -->
+    <div>
+      <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden; position: relative; aspect-ratio: 1 / 1; margin-bottom: 1rem;">
+        <img id="mainProductImg" src="{{ product.primary_image }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover; transition: var(--transition);">
+        {% if product.discount_percent > 0 %}
+        <span class="product-badge" style="font-size: 0.85rem; padding: 0.35rem 0.8rem;">{{ product.discount_percent|int }}% OFF</span>
+        {% endif %}
+      </div>
+
+      {% if product.images|length > 1 %}
+      <div style="display: flex; gap: 0.75rem; overflow-x: auto;">
+        {% for img in product.images %}
+        <img src="{{ img.image_url }}" alt="Thumbnail" style="width: 72px; height: 72px; object-fit: cover; border-radius: var(--radius-sm); border: 2px solid {% if loop.first %}var(--color-brand){% else %}var(--border-light){% endif %}; cursor: pointer;" onclick="swapMainImage(this.src, this)">
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Product Info & Purchasing -->
+    <div style="display: flex; flex-direction: column;">
+      <div style="font-size: 0.85rem; font-weight: 800; color: var(--color-accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.4rem;">
+        {{ product.category_name }}
+      </div>
+      <h1 style="font-size: 2.2rem; font-weight: 800; line-height: 1.2; margin-bottom: 0.8rem;">{{ product.name }}</h1>
+
+      <!-- Rating Breakdown -->
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.2rem; color: var(--color-warning); font-size: 1rem;">
+          <i class="bi bi-star-fill"></i>
+          <span style="font-weight: 800; color: var(--text-main); font-size: 1.1rem; margin-left: 4px;">{{ product.avg_rating }}</span>
+        </div>
+        <span style="color: var(--text-dim);">|</span>
+        <span style="color: var(--text-muted); font-weight: 600; font-size: 0.9rem;">{{ product.review_count }} Customer Reviews</span>
+      </div>
+
+      <!-- Price Block -->
+      <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: baseline; gap: 1rem;">
+        <span style="font-size: 2.2rem; font-weight: 800; color: var(--text-main);">₹{{ "{:,.2f}".format(product.discounted_price) }}</span>
+        {% if product.discount_percent > 0 %}
+        <span style="font-size: 1.1rem; text-decoration: line-through; color: var(--text-dim);">₹{{ "{:,.2f}".format(product.price) }}</span>
+        <span style="color: var(--color-success); font-weight: 700; font-size: 0.9rem;">Save ₹{{ "{:,.2f}".format(product.price - product.discounted_price) }}</span>
+        {% endif %}
+      </div>
+
+      <!-- Short Description -->
+      <p style="color: var(--text-muted); font-size: 0.98rem; margin-bottom: 1.5rem; line-height: 1.6;">
+        {{ product.short_description }}
+      </p>
+
+      <!-- Stock Status -->
+      <div style="margin-bottom: 1.5rem;">
+        {% if product.stock > 10 %}
+        <span style="color: var(--color-success); font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;">
+          <i class="bi bi-check-circle-fill"></i> In Stock ({{ product.stock }} available)
+        </span>
+        {% elif product.stock > 0 %}
+        <span style="color: var(--color-warning); font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;">
+          <i class="bi bi-exclamation-triangle-fill"></i> Low Stock - Only {{ product.stock }} left!
+        </span>
+        {% else %}
+        <span style="color: var(--color-danger); font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;">
+          <i class="bi bi-x-circle-fill"></i> Currently Out of Stock
+        </span>
+        {% endif %}
+      </div>
+
+      <!-- Quantity Selector & Actions -->
+      <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem;">
+        <div style="display: inline-flex; align-items: center; background: var(--bg-input); border: 1px solid var(--border-light); border-radius: var(--radius-md);">
+          <button style="padding: 0.6rem 0.9rem; background: transparent; border: none; color: var(--text-main); font-size: 1.1rem; cursor: pointer;" onclick="adjustQty(-1)">-</button>
+          <span id="qtyVal" style="padding: 0 1rem; font-weight: 800; font-size: 1.05rem;">1</span>
+          <button style="padding: 0.6rem 0.9rem; background: transparent; border: none; color: var(--text-main); font-size: 1.1rem; cursor: pointer;" onclick="adjustQty(1)">+</button>
+        </div>
+
+        <button class="btn btn-primary" style="flex: 1; padding: 0.9rem 1.5rem;" onclick="addCurrentToCart()" {% if product.stock <= 0 %}disabled{% endif %}>
+          <i class="bi bi-cart-plus-fill" style="font-size: 1.2rem;"></i> Add to Cart
+        </button>
+
+        <button class="btn btn-accent" style="padding: 0.9rem 1.5rem;" onclick="buyNow()" {% if product.stock <= 0 %}disabled{% endif %}>
+          Buy Now
+        </button>
+
+        <button class="nav-icon-btn" style="width: 48px; height: 48px; border-radius: var(--radius-md);" onclick="TechTrend.toggleWishlist({{ product.id }}, this)" title="Add to Wishlist">
+          <i class="bi bi-heart-fill"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tabs: Specifications & Detailed Description -->
+  <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 2.5rem; margin-bottom: 4rem;">
+    <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1.5rem;">Product Overview & Specifications</h2>
+    
+    <p style="color: var(--text-muted); line-height: 1.7; margin-bottom: 2rem; font-size: 1rem;">
+      {{ product.description }}
+    </p>
+
+    {% if product.specifications %}
+    <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 1rem; color: var(--color-accent);">Technical Specifications</h3>
+    <div style="background: var(--bg-input); border-radius: var(--radius-md); padding: 1.5rem; white-space: pre-line; font-family: monospace; font-size: 0.92rem; color: var(--text-main); line-height: 1.8;">
+      {{ product.specifications }}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Reviews & Ratings Section -->
+  <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 2.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <div>
+        <h2 style="font-size: 1.5rem; font-weight: 800;">Customer Reviews</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Verified feedback from real customers</p>
+      </div>
+    </div>
+
+    <!-- Review Form -->
+    <div style="background: var(--bg-input); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 2.5rem;">
+      <h4 style="font-size: 1.05rem; font-weight: 800; margin-bottom: 1rem;">Write a Product Review</h4>
+      <form onsubmit="event.preventDefault(); submitReview();">
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">YOUR RATING</label>
+          <select id="reviewRatingSelect" class="search-input" style="width: 160px; padding: 0.5rem;">
+            <option value="5">★★★★★ (5/5 Excellent)</option>
+            <option value="4">★★★★☆ (4/5 Good)</option>
+            <option value="3">★★★☆☆ (3/5 Average)</option>
+            <option value="2">★★☆☆☆ (2/5 Below Average)</option>
+            <option value="1">★☆☆☆☆ (1/5 Poor)</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <textarea id="reviewText" class="search-input" style="height: 90px; border-radius: var(--radius-md);" placeholder="Share details about performance, build quality, battery life..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="bi bi-send-fill"></i> Submit Review
+        </button>
+      </form>
+    </div>
+
+    <!-- Existing Reviews List -->
+    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+      {% if reviews %}
+        {% for rev in reviews %}
+        <div style="border-bottom: 1px solid var(--border-light); padding-bottom: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">{{ rev.full_name or 'Verified Customer' }}</span>
+            <span style="font-size: 0.78rem; color: var(--text-dim);">{{ rev.created_at }}</span>
+          </div>
+          <div style="color: var(--color-warning); font-size: 0.85rem; margin-bottom: 0.5rem;">
+            {% for _ in range(rev.rating) %}<i class="bi bi-star-fill"></i>{% endfor %}
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.5;">{{ rev.review_text }}</p>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p style="color: var(--text-dim); text-align: center; padding: 2rem 0;">No reviews written yet. Be the first to review this product!</p>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentQty = 1;
+const maxStock = {{ product.stock }};
+
+function swapMainImage(src, thumbEl) {
+  document.getElementById('mainProductImg').src = src;
+  document.querySelectorAll('img[alt="Thumbnail"]').forEach(t => t.style.borderColor = 'var(--border-light)');
+  thumbEl.style.borderColor = 'var(--color-brand)';
+}
+
+function adjustQty(delta) {
+  currentQty = Math.max(1, Math.min(maxStock, currentQty + delta));
+  document.getElementById('qtyVal').innerText = currentQty;
+}
+
+function addCurrentToCart() {
+  TechTrend.addToCart({{ product.id }}, currentQty);
+}
+
+async function buyNow() {
+  await TechTrend.addToCart({{ product.id }}, currentQty);
+  window.location.href = "{{ url_for('cart.cart_page') }}";
+}
+
+async function submitReview() {
+  const rating = document.getElementById('reviewRatingSelect').value;
+  const reviewText = document.getElementById('reviewText').value.trim();
+
+  try {
+    const res = await fetch('/api/reviews/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: {{ product.id }}, rating: rating, review_text: reviewText })
+    });
+    const data = await res.json();
+    if (res.status === 401 && data.redirect_url) {
+      TechTrend.showToast(data.message, 'warning');
+      setTimeout(() => window.location.href = data.redirect_url, 1200);
+      return;
+    }
+
+    if (data.success) {
+      TechTrend.showToast(data.message, 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      TechTrend.showToast(data.message, 'error');
+    }
+  } catch (err) {
+    TechTrend.showToast('Failed to submit review.', 'error');
+  }
+}
+</script>
+{% endblock %}

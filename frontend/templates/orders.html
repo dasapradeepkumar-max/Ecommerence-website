@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}My Orders & Order Tracking | TechTrend{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 3rem 1.5rem;">
+  <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 2rem;">
+    <i class="bi bi-box-seam-fill" style="color: var(--color-brand);"></i> My Orders
+  </h1>
+
+  {% if orders %}
+  <div style="display: flex; flex-direction: column; gap: 2rem;">
+    {% for ord in orders %}
+    <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 2rem;">
+      
+      <!-- Order Card Header -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border-light); padding-bottom: 1.25rem; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">ORDER #{{ ord.order_number }}</span>
+          <div style="font-size: 0.85rem; color: var(--text-dim); margin-top: 0.2rem;">Placed on {{ ord.created_at }}</div>
+        </div>
+
+        <div style="text-align: right;">
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">TOTAL AMOUNT</span>
+          <div style="font-size: 1.4rem; font-weight: 800; color: var(--color-accent);">₹{{ "{:,.2f}".format(ord.total_amount) }}</div>
+        </div>
+      </div>
+
+      <!-- Status Timeline Stepper -->
+      {% if ord.status != 'Cancelled' %}
+      <div style="margin-bottom: 2rem; padding: 1rem 0;">
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); position: relative; text-align: center;">
+          
+          {% set stages = ['Ordered', 'Confirmed', 'Shipped', 'Out for Delivery', 'Delivered'] %}
+          {% for st in stages %}
+          {% set st_idx = loop.index0 %}
+          <div style="display: flex; flex-direction: column; align-items: center; position: relative; z-index: 2;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: {% if ord.timeline_index >= st_idx %}var(--color-brand){% else %}var(--bg-input){% endif %}; border: 2px solid {% if ord.timeline_index >= st_idx %}var(--color-brand){% else %}var(--border-light){% endif %}; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 800; margin-bottom: 0.5rem; box-shadow: {% if ord.timeline_index >= st_idx %}0 0 12px var(--color-brand-glow){% else %}none{% endif %};">
+              {% if ord.timeline_index > st_idx %}<i class="bi bi-check-lg"></i>{% else %}{{ loop.index }}{% endif %}
+            </div>
+            <span style="font-size: 0.78rem; font-weight: 700; color: {% if ord.timeline_index >= st_idx %}var(--text-main){% else %}var(--text-dim){% endif %};">{{ st }}</span>
+          </div>
+          {% endfor %}
+
+        </div>
+      </div>
+      {% else %}
+      <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--color-danger); border-radius: var(--radius-md); padding: 0.8rem 1.2rem; color: var(--color-danger); font-weight: 700; font-size: 0.9rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="bi bi-x-circle-fill"></i> Order Cancelled
+      </div>
+      {% endif %}
+
+      <!-- Order Items List -->
+      <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
+        {% for item in ord.order_items %}
+        <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-input); border-radius: var(--radius-md); padding: 1rem;">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <img src="{{ item.primary_image }}" alt="{{ item.name }}" style="width: 56px; height: 56px; object-fit: cover; border-radius: var(--radius-sm);">
+            <div>
+              <a href="{{ url_for('product.product_detail_page', identifier=item.product_id) }}" style="font-weight: 700; color: var(--text-main); font-size: 0.95rem;">{{ item.name }}</a>
+              <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;">Qty: {{ item.quantity }} × ₹{{ "{:,.2f}".format(item.unit_price) }}</div>
+            </div>
+          </div>
+          <div style="font-weight: 800; font-size: 1rem; color: var(--text-main);">
+            ₹{{ "{:,.2f}".format(item.total_price) }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Footer Actions -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-light); padding-top: 1rem; flex-wrap: wrap; gap: 1rem;">
+        <div style="font-size: 0.85rem; color: var(--text-muted);">
+          Delivering to: <strong style="color: var(--text-main);">{{ ord.address_name }}</strong>, {{ ord.city }}
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          {% if ord.status in ['Ordered', 'Confirmed'] %}
+          <button class="btn btn-outline btn-sm" style="color: var(--color-danger); border-color: rgba(239, 68, 68, 0.4);" onclick="cancelOrder({{ ord.id }})">
+            <i class="bi bi-x-circle"></i> Cancel Order
+          </button>
+          {% endif %}
+
+          <button class="btn btn-primary btn-sm" onclick="reorderItems({{ ord.id }})">
+            <i class="bi bi-arrow-repeat"></i> Reorder
+          </button>
+        </div>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 5rem 2rem; text-align: center; max-width: 540px; margin: 0 auto;">
+    <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(99, 102, 241, 0.15); color: var(--color-brand); display: inline-flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 1.5rem;">
+      <i class="bi bi-box-seam"></i>
+    </div>
+    <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 0.5rem;">No Orders Placed Yet</h2>
+    <p style="color: var(--text-muted); margin-bottom: 2rem;">When you place orders, you can track their live delivery status right here.</p>
+    <a href="{{ url_for('product.products_page') }}" class="btn btn-primary">
+      <i class="bi bi-cart"></i> Start Shopping Now
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function cancelOrder(orderId) {
+  if (!confirm('Are you sure you want to cancel this order?')) return;
+  try {
+    const res = await fetch('/api/orders/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_id: orderId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      TechTrend.showToast(data.message, 'success');
+      setTimeout(() => location.reload(), 800);
+    } else {
+      TechTrend.showToast(data.message, 'error');
+    }
+  } catch (err) {
+    TechTrend.showToast('Failed to cancel order.', 'error');
+  }
+}
+
+async function reorderItems(orderId) {
+  try {
+    const res = await fetch('/api/orders/reorder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_id: orderId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      TechTrend.showToast(data.message, 'success');
+      setTimeout(() => window.location.href = data.redirect_url, 800);
+    } else {
+      TechTrend.showToast(data.message, 'error');
+    }
+  } catch (err) {
+    TechTrend.showToast('Reorder failed.', 'error');
+  }
+}
+</script>
+{% endblock %}

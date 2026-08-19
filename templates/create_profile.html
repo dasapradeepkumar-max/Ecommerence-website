@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Create Profile{% endblock %}
+{% block content %}
+<section class="card profile-card reveal">
+    <p class="eyebrow">First-time setup</p>
+    <h1>Create Profile</h1>
+    <p class="subtitle">Complete your delivery profile to continue.</p>
+
+    <form action="{{ url_for('auth.create_profile') }}" method="post" class="form-grid profile-grid">
+        <label for="name">Name</label>
+        <input id="name" name="name" type="text" required maxlength="120" placeholder="Your full name">
+
+        <label for="address">Address</label>
+        <input id="address" name="address" type="text" required maxlength="255" placeholder="Flat/House, Street, Area">
+
+        <label for="city">City</label>
+        <input id="city" name="city" type="text" required maxlength="80" placeholder="Mumbai">
+
+        <label for="state">State</label>
+        <input id="state" name="state" type="text" required maxlength="80" placeholder="Maharashtra">
+
+        <label for="pincode">Pincode</label>
+        <input id="pincode" name="pincode" type="text" required pattern="\d{6}" maxlength="6" placeholder="400001">
+
+        <button type="submit" class="btn btn-primary">Save Profile</button>
+    </form>
+</section>
+{% endblock %}

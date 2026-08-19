@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}All Products | TechTrend Catalog{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.5rem;">
+  
+  <!-- Header Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h1 style="font-size: 1.8rem; font-weight: 800;">
+        {% if selected_category %}{{ selected_category.name }}{% else %}All Products{% endif %}
+      </h1>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">
+        Showing {{ products|length }} product(s) available in store
+      </p>
+    </div>
+
+    <!-- Sorting -->
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">SORT BY:</label>
+      <select id="sortSelect" class="search-input" style="width: auto; padding: 0.5rem 1rem;" onchange="applyFilters()">
+        <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Most Popular</option>
+        <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+        <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+        <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Highest Rated</option>
+        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest Arrivals</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Layout Grid: Sidebar + Product Grid -->
+  <div style="display: grid; grid-template-columns: 260px 1fr; gap: 2rem;">
+    
+    <!-- Sidebar Filters -->
+    <aside style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1.5rem; height: fit-content;">
+      <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-light); padding-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center;">
+        <span><i class="bi bi-funnel-fill" style="color: var(--color-brand);"></i> Filters</span>
+        <a href="{{ url_for('product.products_page') }}" style="font-size: 0.75rem; color: var(--color-accent); font-weight: 600;">Reset All</a>
+      </h3>
+
+      <form id="filterForm" action="{{ url_for('product.products_page') }}" method="GET">
+        <input type="hidden" name="sort" id="hiddenSort" value="{{ sort_by }}">
+
+        <!-- Search Filter -->
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">SEARCH KEYWORD</label>
+          <input type="text" name="q" value="{{ search_q or '' }}" class="search-input" style="padding: 0.5rem 0.8rem;" placeholder="Search name...">
+        </div>
+
+        <!-- Categories Filter -->
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.6rem;">CATEGORY</label>
+          <div style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 200px; overflow-y: auto;">
+            <label style="font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+              <input type="radio" name="category" value="" {% if not selected_category %}checked{% endif %} onchange="applyFilters()">
+              <span>All Categories</span>
+            </label>
+            {% for cat in categories %}
+            <label style="font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+              <input type="radio" name="category" value="{{ cat.id }}" {% if selected_category and selected_category.id == cat.id %}checked{% endif %} onchange="applyFilters()">
+              <span>{{ cat.name }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Price Range Filter -->
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.6rem;">PRICE RANGE (₹)</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+            <input type="number" name="min_price" value="{{ min_price or '' }}" placeholder="Min" class="search-input" style="padding: 0.4rem 0.6rem; font-size: 0.85rem;">
+            <input type="number" name="max_price" value="{{ max_price or '' }}" placeholder="Max" class="search-input" style="padding: 0.4rem 0.6rem; font-size: 0.85rem;">
+          </div>
+        </div>
+
+        <!-- Minimum Rating Filter -->
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.6rem;">MINIMUM RATING</label>
+          <select name="rating" class="search-input" style="padding: 0.4rem 0.6rem; font-size: 0.85rem;" onchange="applyFilters()">
+            <option value="">Any Rating</option>
+            <option value="4.5" {% if min_rating == '4.5' %}selected{% endif %}>4.5★ & Above</option>
+            <option value="4.0" {% if min_rating == '4.0' %}selected{% endif %}>4.0★ & Above</option>
+            <option value="3.5" {% if min_rating == '3.5' %}selected{% endif %}>3.5★ & Above</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-sm btn-full">
+          <i class="bi bi-filter"></i> Apply Filters
+        </button>
+      </form>
+    </aside>
+
+    <!-- Product Grid -->
+    <div>
+      {% if products %}
+      <div class="product-grid">
+        {% for prod in products %}
+        <div class="product-card">
+          {% if prod.discount_percent > 0 %}
+          <span class="product-badge">{{ prod.discount_percent|int }}% OFF</span>
+          {% endif %}
+
+          <button class="product-wishlist-btn" onclick="TechTrend.toggleWishlist({{ prod.id }}, this)">
+            <i class="bi bi-heart"></i>
+          </button>
+
+          <a href="{{ url_for('product.product_detail_page', identifier=prod.id) }}" class="product-img-wrapper">
+            <img src="{{ prod.primary_image }}" alt="{{ prod.name }}" class="product-img" loading="lazy">
+          </a>
+
+          <div class="product-content">
+            <div class="product-category">{{ prod.category_name }}</div>
+            <a href="{{ url_for('product.product_detail_page', identifier=prod.id) }}" class="product-title">{{ prod.name }}</a>
+            
+            <div class="product-rating">
+              <i class="bi bi-star-fill"></i>
+              <span>{{ prod.avg_rating }}</span>
+              <span class="rating-count">({{ prod.review_count }})</span>
+            </div>
+
+            <div class="product-price-row">
+              <span class="price-current">₹{{ "{:,.2f}".format(prod.discounted_price) }}</span>
+              {% if prod.discount_percent > 0 %}
+              <span class="price-original">₹{{ "{:,.2f}".format(prod.price) }}</span>
+              {% endif %}
+            </div>
+
+            <button class="btn btn-primary btn-sm btn-full" onclick="TechTrend.addToCart({{ prod.id }})">
+              <i class="bi bi-cart-plus"></i> Add to Cart
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 4rem 2rem; text-align: center;">
+        <i class="bi bi-search" style="font-size: 3rem; color: var(--text-dim); margin-bottom: 1rem; display: inline-block;"></i>
+        <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem;">No Products Found</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Try adjusting your search criteria or price filters.</p>
+        <a href="{{ url_for('product.products_page') }}" class="btn btn-primary btn-sm">Reset Search Filters</a>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function applyFilters() {
+  document.getElementById('hiddenSort').value = document.getElementById('sortSelect').value;
+  document.getElementById('filterForm').submit();
+}
+</script>
+{% endblock %}

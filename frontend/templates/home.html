@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}TechTrend | Flagship Electronics & Premium Accessories{% endblock %}
+
+{% block content %}
+<!-- Hero Banner -->
+<section class="hero-section">
+  <div class="container">
+    <div class="hero-banner">
+      <div>
+        <div class="hero-tag">
+          <i class="bi bi-stars"></i> NEW GENERATION RELEASE
+        </div>
+        <h1 class="hero-title">Experience Ultra Performance.</h1>
+        <p class="hero-subtitle">
+          Upgrade your workspace and mobile lifestyle with flagship M3 laptops, Hi-Res ANC headphones, and precision smartwatch gear.
+        </p>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <a href="{{ url_for('product.products_page') }}" class="btn btn-primary">
+            <span>Explore Catalog</span>
+            <i class="bi bi-arrow-right"></i>
+          </a>
+          <a href="{{ url_for('product.category_products_page', slug='electronics-gadgets') }}" class="btn btn-outline">
+            View Laptops
+          </a>
+        </div>
+      </div>
+      <div class="hero-img-wrapper">
+        <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&q=80" alt="ProBook Ultra 15" class="hero-img">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Promotional Offer Banners -->
+<section style="padding: 1.5rem 0;">
+  <div class="container">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+      
+      <div style="background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid var(--border-brand); border-radius: var(--radius-md); padding: 1.8rem; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="color: var(--color-accent); font-weight: 800; font-size: 0.8rem; letter-spacing: 1px;">PROMO CODE: WELCOME10</span>
+          <h3 style="font-size: 1.3rem; font-weight: 800; margin: 0.3rem 0;">10% OFF First Order</h3>
+          <p style="color: var(--text-dim); font-size: 0.85rem;">Applies to all products over ₹499</p>
+        </div>
+        <i class="bi bi-ticket-perforated-fill" style="font-size: 3rem; color: var(--color-brand); opacity: 0.7;"></i>
+      </div>
+
+      <div style="background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid var(--border-brand); border-radius: var(--radius-md); padding: 1.8rem; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="color: var(--color-success); font-weight: 800; font-size: 0.8rem; letter-spacing: 1px;">FREE EXPRESS SHIPPING</span>
+          <h3 style="font-size: 1.3rem; font-weight: 800; margin: 0.3rem 0;">Orders Above ₹999</h3>
+          <p style="color: var(--text-dim); font-size: 0.85rem;">Guaranteed delivery in 3-5 days</p>
+        </div>
+        <i class="bi bi-truck-flatbed" style="font-size: 3rem; color: var(--color-success); opacity: 0.7;"></i>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Category Highlights -->
+<section style="padding: 2.5rem 0;">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
+      <div>
+        <h2 style="font-size: 1.8rem; font-weight: 800;">Browse Top Categories</h2>
+        <p style="color: var(--text-muted); font-size: 0.92rem;">Explore curated tech tailored for creators and tech enthusiasts</p>
+      </div>
+      <a href="{{ url_for('product.products_page') }}" style="color: var(--color-accent); font-weight: 700; font-size: 0.9rem;">View All <i class="bi bi-chevron-right"></i></a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.25rem;">
+      {% for cat in categories %}
+      <a href="{{ url_for('product.category_products_page', slug=cat.slug) }}" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1.5rem 1rem; text-align: center; transition: var(--transition);" onmouseover="this.style.borderColor='var(--color-brand)'; this.style.transform='translateY(-4px)';" onmouseout="this.style.borderColor='var(--border-light)'; this.style.transform='none';">
+        <div style="width: 54px; height: 54px; border-radius: 50%; background: rgba(99, 102, 241, 0.15); color: var(--color-brand); display: inline-flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 0.8rem;">
+          <i class="bi {{ cat.icon }}"></i>
+        </div>
+        <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">{{ cat.name }}</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Featured Products Section -->
+<section style="padding: 2.5rem 0;">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
+      <div>
+        <h2 style="font-size: 1.8rem; font-weight: 800;">Featured Products</h2>
+        <p style="color: var(--text-muted); font-size: 0.92rem;">Top picks recommended by our expert review team</p>
+      </div>
+      <a href="{{ url_for('product.products_page') }}" style="color: var(--color-accent); font-weight: 700; font-size: 0.9rem;">View All <i class="bi bi-chevron-right"></i></a>
+    </div>
+
+    <div class="product-grid">
+      {% for prod in featured_products %}
+      <div class="product-card">
+        {% if prod.discount_percent > 0 %}
+        <span class="product-badge">{{ prod.discount_percent|int }}% OFF</span>
+        {% endif %}
+        
+        <button class="product-wishlist-btn" onclick="TechTrend.toggleWishlist({{ prod.id }}, this)" title="Add to Wishlist">
+          <i class="bi bi-heart"></i>
+        </button>
+
+        <a href="{{ url_for('product.product_detail_page', identifier=prod.id) }}" class="product-img-wrapper">
+          <img src="{{ prod.primary_image }}" alt="{{ prod.name }}" class="product-img" loading="lazy">
+        </a>
+
+        <div class="product-content">
+          <div class="product-category">{{ prod.category_name }}</div>
+          <a href="{{ url_for('product.product_detail_page', identifier=prod.id) }}" class="product-title">{{ prod.name }}</a>
+          
+          <div class="product-rating">
+            <i class="bi bi-star-fill"></i>
+            <span>{{ prod.avg_rating }}</span>
+            <span class="rating-count">({{ prod.review_count }})</span>
+          </div>
+
+          <div class="product-price-row">
+            <span class="price-current">₹{{ "{:,.2f}".format(prod.discounted_price) }}</span>
+            {% if prod.discount_percent > 0 %}
+            <span class="price-original">₹{{ "{:,.2f}".format(prod.price) }}</span>
+            {% endif %}
+          </div>
+
+          <button class="btn btn-primary btn-sm btn-full" onclick="TechTrend.addToCart({{ prod.id }})">
+            <i class="bi bi-cart-plus"></i> Add to Cart
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Trending Products -->
+<section style="padding: 2.5rem 0; background: rgba(19, 27, 46, 0.4);">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
+      <div>
+        <h2 style="font-size: 1.8rem; font-weight: 800;">🔥 Trending Now</h2>
+        <p style="color: var(--text-muted); font-size: 0.92rem;">Most popular items selling fast this week</p>
+      </div>
+    </div>
+
+    <div class="product-grid">
+      {% for prod in trending_products %}
+      <div class="product-card">
+        {% if prod.discount_percent > 0 %}
+        <span class="product-badge">{{ prod.discount_percent|int }}% OFF</span>
+        {% endif %}
+
+        <button class="product-wishlist-btn" onclick="TechTrend.toggleWishlist({{ prod.id }}, this)">
+          <i class="bi bi-heart"></i>
+        </button>
+
+        <a href="{{ url_for('product.product_detail_page', identifier=prod.id) }}" class="product-img-wrapper">
+          <img src="{{ prod.primary_image }}" alt="{{ prod.name }}" class="product-img">
+        </a>
+
+        <div class="product-content">
+          <div class="product-category">{{ prod.category_name }}</div>
+          <a href="{{ url_for('product.product_detail_page', identifier=prod.id) }}" class="product-title">{{ prod.name }}</a>
+          
+          <div class="product-rating">
+            <i class="bi bi-star-fill"></i>
+            <span>{{ prod.avg_rating }}</span>
+            <span class="rating-count">({{ prod.review_count }})</span>
+          </div>
+
+          <div class="product-price-row">
+            <span class="price-current">₹{{ "{:,.2f}".format(prod.discounted_price) }}</span>
+            {% if prod.discount_percent > 0 %}
+            <span class="price-original">₹{{ "{:,.2f}".format(prod.price) }}</span>
+            {% endif %}
+          </div>
+
+          <button class="btn btn-primary btn-sm btn-full" onclick="TechTrend.addToCart({{ prod.id }})">
+            <i class="bi bi-cart-plus"></i> Add to Cart
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

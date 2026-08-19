@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}User Profile & Address Book | TechTrend{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 3rem 1.5rem;">
+  <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 2rem;">
+    <i class="bi bi-person-gear" style="color: var(--color-brand);"></i> Account Dashboard
+  </h1>
+
+  <div style="display: grid; grid-template-columns: 260px 1fr; gap: 2.5rem;">
+    
+    <!-- Sidebar Navigation -->
+    <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 1.5rem; height: fit-content;">
+      <div style="text-align: center; border-bottom: 1px solid var(--border-light); padding-bottom: 1.25rem; margin-bottom: 1rem;">
+        <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--color-brand); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; margin-bottom: 0.6rem;">
+          {{ user.full_name[0] if user.full_name else 'U' }}
+        </div>
+        <div style="font-weight: 800; font-size: 1.1rem; color: var(--text-main);">{{ user.full_name or 'User' }}</div>
+        <div style="font-size: 0.8rem; color: var(--text-dim);">{{ user.email or user.phone or '' }}</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <a href="{{ url_for('review.user_profile_page') }}" class="cat-pill active" style="border-radius: var(--radius-md); padding: 0.65rem 1rem;">
+          <i class="bi bi-person-circle"></i> Profile & Address
+        </a>
+        <a href="{{ url_for('order.my_orders_page') }}" class="cat-pill" style="border-radius: var(--radius-md); padding: 0.65rem 1rem;">
+          <i class="bi bi-box-seam"></i> My Orders
+        </a>
+        <a href="{{ url_for('wishlist.wishlist_page') }}" class="cat-pill" style="border-radius: var(--radius-md); padding: 0.65rem 1rem;">
+          <i class="bi bi-heart"></i> Saved Wishlist
+        </a>
+        <a href="{{ url_for('auth.logout') }}" class="cat-pill" style="border-radius: var(--radius-md); padding: 0.65rem 1rem; color: var(--color-danger);">
+          <i class="bi bi-box-arrow-right"></i> Sign Out
+        </a>
+      </div>
+    </div>
+
+    <!-- Right Main Content -->
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
+      
+      <!-- Personal Details Card -->
+      <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 2rem;">
+        <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-light); padding-bottom: 0.6rem;">
+          Personal Information
+        </h3>
+
+        <form method="POST" action="{{ url_for('review.user_profile_page') }}">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;">
+            <div style="grid-column: span 2;">
+              <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">FULL NAME</label>
+              <input type="text" name="full_name" class="search-input" value="{{ user.full_name or '' }}" required>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">PHONE NUMBER</label>
+              <input type="text" name="phone" class="search-input" value="{{ user.phone or '' }}">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">EMAIL ADDRESS</label>
+              <input type="email" name="email" class="search-input" value="{{ user.email or '' }}">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-save"></i> Save Profile Changes
+          </button>
+        </form>
+      </div>
+
+      <!-- Address Book Card -->
+      <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-light); padding-bottom: 0.6rem;">
+          <h3 style="font-size: 1.25rem; font-weight: 800;">Saved Delivery Addresses</h3>
+          <button class="btn btn-outline btn-sm" onclick="toggleAddAddrModal()">+ Add Address</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          {% for addr in addresses %}
+          <div style="background: var(--bg-input); border: 1px solid {% if addr.is_default %}var(--color-brand){% else %}var(--border-light){% endif %}; border-radius: var(--radius-md); padding: 1.25rem; position: relative;">
+            {% if addr.is_default %}
+            <span class="product-badge" style="background: var(--color-brand); font-size: 0.72rem; top: 12px; right: 12px;">DEFAULT</span>
+            {% endif %}
+            <div style="font-weight: 800; font-size: 1rem; color: var(--text-main);">{{ addr.full_name }} ({{ addr.phone }})</div>
+            <div style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.3rem;">
+              {{ addr.address_line }}, {{ addr.city }}, {{ addr.state }} - {{ addr.pincode }}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Add Address Inline Form -->
+        <div id="addAddrModal" style="display: none; margin-top: 1.5rem; background: var(--bg-input); border-radius: var(--radius-md); padding: 1.5rem;">
+          <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 1rem;">New Address Details</h4>
+          <form onsubmit="event.preventDefault(); submitNewAddress();">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <input type="text" id="addrFullName" class="search-input" placeholder="Full Name" value="{{ user.full_name or '' }}" required>
+              <input type="text" id="addrPhone" class="search-input" placeholder="Phone Number" value="{{ user.phone or '' }}" required>
+              <input type="text" id="addrLine" class="search-input" style="grid-column: span 2;" placeholder="House/Flat No, Street Address" required>
+              <input type="text" id="addrCity" class="search-input" placeholder="City" required>
+              <input type="text" id="addrState" class="search-input" placeholder="State" required>
+              <input type="text" id="addrPincode" class="search-input" style="grid-column: span 2;" placeholder="Pincode" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Save Address</button>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleAddAddrModal() {
+  const modal = document.getElementById('addAddrModal');
+  modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+}
+
+async function submitNewAddress() {
+  const payload = {
+    full_name: document.getElementById('addrFullName').value.trim(),
+    phone: document.getElementById('addrPhone').value.trim(),
+    address_line: document.getElementById('addrLine').value.trim(),
+    city: document.getElementById('addrCity').value.trim(),
+    state: document.getElementById('addrState').value.trim(),
+    pincode: document.getElementById('addrPincode').value.trim(),
+    is_default: 1
+  };
+
+  try {
+    const res = await fetch('/api/address/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      TechTrend.showToast(data.message, 'success');
+      setTimeout(() => location.reload(), 600);
+    } else {
+      TechTrend.showToast(data.message, 'error');
+    }
+  } catch (err) {
+    TechTrend.showToast('Failed to save address.', 'error');
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Login | E-Commerce{% endblock %}
+{% block content %}
+<section class="card auth-card reveal">
+    <p class="eyebrow">Welcome back</p>
+    <h1>Sign in to continue shopping</h1>
+    <p class="subtitle">Use your phone number or Gmail/email to receive a secure OTP.</p>
+
+    {% if db_error %}
+    <div class="flash flash-error">
+        <strong>Database connection failed:</strong>
+        <div class="small-note">{{ db_error }}</div>
+        <div class="small-note">Set MYSQL_USER and MYSQL_PASSWORD in .env, then restart the app.</div>
+    </div>
+    {% endif %}
+
+    <form action="{{ url_for('auth.request_otp') }}" method="post" class="form-grid">
+        <label for="identifier">Phone Number or Email</label>
+        <input id="identifier" name="identifier" type="text" required placeholder="+919876543210 or you@gmail.com" autocomplete="username">
+
+        <div class="mode-row">
+            <button type="submit" name="mode" value="login" class="btn btn-primary">Send OTP</button>
+            <button type="submit" name="mode" value="register" class="btn btn-secondary">Create a New Account</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

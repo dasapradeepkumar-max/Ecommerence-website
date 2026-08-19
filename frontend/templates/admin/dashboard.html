@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | TechTrend Store</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+
+  <div class="admin-layout">
+    
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="brand-logo" style="margin-bottom: 2rem;">
+        <i class="bi bi-shield-check"></i>
+        <span>Admin</span>
+      </div>
+
+      <nav style="flex: 1;">
+        <div class="admin-nav-item active" onclick="switchTab('tabKPIs')">
+          <i class="bi bi-speedometer2"></i> Dashboard KPIs
+        </div>
+        <div class="admin-nav-item" onclick="switchTab('tabProducts')">
+          <i class="bi bi-box-seam-fill"></i> Product Catalog
+        </div>
+        <div class="admin-nav-item" onclick="switchTab('tabOrders')">
+          <i class="bi bi-bag-check-fill"></i> Customer Orders
+        </div>
+        <div class="admin-nav-item" onclick="switchTab('tabCoupons')">
+          <i class="bi bi-ticket-perforated-fill"></i> Coupons & Promos
+        </div>
+      </nav>
+
+      <div style="border-top: 1px solid var(--border-light); padding-top: 1rem;">
+        <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">{{ session.get('admin_name') }}</div>
+        <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.75rem;">{{ session.get('admin_email') }}</div>
+        <a href="{{ url_for('admin.admin_logout') }}" class="btn btn-outline btn-sm btn-full" style="color: var(--color-danger);">
+          <i class="bi bi-box-arrow-right"></i> Logout Admin
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Section -->
+    <main style="padding: 2.5rem; overflow-y: auto;">
+      
+      <!-- Top Bar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+          <h1 style="font-size: 1.8rem; font-weight: 800;">E-Commerce Admin Dashboard</h1>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Real-time sales performance, inventory control, and order status updates</p>
+        </div>
+        <a href="{{ url_for('product.home_page') }}" target="_blank" class="btn btn-outline btn-sm">
+          <i class="bi bi-box-arrow-up-right"></i> View Live Store front
+        </a>
+      </div>
+
+      <!-- KPI Overview Grid -->
+      <div id="tabKPIs" class="tab-section">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">TOTAL REVENUE</div>
+            <div class="kpi-val" style="color: var(--color-success);">₹{{ "{:,.2f}".format(kpis.total_revenue) }}</div>
+            <div style="font-size: 0.8rem; color: var(--text-dim);">Completed transactions</div>
+          </div>
+
+          <div class="kpi-card">
+            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">TOTAL ORDERS</div>
+            <div class="kpi-val" style="color: var(--color-accent);">{{ kpis.total_orders }}</div>
+            <div style="font-size: 0.8rem; color: var(--text-dim);">Customer purchases</div>
+          </div>
+
+          <div class="kpi-card">
+            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">ACTIVE USERS</div>
+            <div class="kpi-val" style="color: var(--color-brand);">{{ kpis.total_users }}</div>
+            <div style="font-size: 0.8rem; color: var(--text-dim);">Registered accounts</div>
+          </div>
+
+          <div class="kpi-card">
+            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">LOW STOCK ALERTS</div>
+            <div class="kpi-val" style="color: var(--color-warning);">{{ kpis.low_stock_count }}</div>
+            <div style="font-size: 0.8rem; color: var(--text-dim);">Items with ≤ 10 units</div>
+          </div>
+        </div>
+
+        <!-- Low Stock Table -->
+        {% if low_stock %}
+        <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1.5rem; margin-top: 2rem;">
+          <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--color-warning); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="bi bi-exclamation-triangle-fill"></i> Low Stock Inventory Warning
+          </h3>
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Current Stock</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in low_stock %}
+              <tr>
+                <td style="font-weight: 700; color: var(--text-main);">{{ p.name }}</td>
+                <td>{{ p.category_name }}</td>
+                <td>₹{{ "{:,.2f}".format(p.price) }}</td>
+                <td style="font-weight: 800; color: var(--color-warning);">{{ p.stock }} units</td>
+                <td><span class="product-badge" style="position: static; background: var(--color-warning);">REORDER SOON</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Products Management Section -->
+      <div id="tabProducts" class="tab-section" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1.25rem; font-weight: 800;">Manage Products</h3>
+          <button class="btn btn-primary btn-sm" onclick="AdminApp.showModal('modalProduct')">+ Add New Product</button>
+        </div>
+
+        <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); overflow-x: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Rating</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in products %}
+              <tr>
+                <td>#{{ p.id }}</td>
+                <td style="font-weight: 700; color: var(--text-main);">{{ p.name }}</td>
+                <td>{{ p.category_name }}</td>
+                <td>₹{{ "{:,.2f}".format(p.price) }}</td>
+                <td>{{ p.stock }}</td>
+                <td>★ {{ p.avg_rating }}</td>
+                <td>
+                  <button class="btn btn-outline btn-sm" style="color: var(--color-danger);" onclick="AdminApp.deleteProduct({{ p.id }})">Deactivate</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Orders Management Section -->
+      <div id="tabOrders" class="tab-section" style="display: none;">
+        <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.5rem;">Manage Customer Orders</h3>
+        <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); overflow-x: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Order Ref</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Payment</th>
+                <th>Status Timeline</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ord in orders %}
+              <tr>
+                <td style="font-weight: 800; color: var(--color-accent);">{{ ord.order_number }}</td>
+                <td>
+                  <div style="font-weight: 700;">{{ ord.customer_name }}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-dim);">{{ ord.customer_phone or ord.customer_email }}</div>
+                </td>
+                <td style="font-weight: 800;">₹{{ "{:,.2f}".format(ord.total_amount) }}</td>
+                <td>{{ ord.payment_method }} ({{ ord.payment_status }})</td>
+                <td>
+                  <select class="search-input" style="padding: 0.35rem 0.6rem; font-size: 0.82rem; width: auto;" onchange="AdminApp.updateOrderStatus({{ ord.id }}, this.value)">
+                    {% for st in statuses %}
+                    <option value="{{ st }}" {% if ord.status == st %}selected{% endif %}>{{ st }}</option>
+                    {% endfor %}
+                  </select>
+                </td>
+                <td>
+                  <span class="product-badge" style="position: static; background: var(--color-brand);">ACTIVE</span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Coupons Management Section -->
+      <div id="tabCoupons" class="tab-section" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1.25rem; font-weight: 800;">Coupons & Discount Codes</h3>
+          <button class="btn btn-primary btn-sm" onclick="AdminApp.showModal('modalCoupon')">+ Create Coupon</button>
+        </div>
+
+        <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); overflow-x: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Type</th>
+                <th>Value</th>
+                <th>Min Order</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in coupons %}
+              <tr>
+                <td style="font-weight: 800; color: var(--color-accent);">{{ c.code }}</td>
+                <td>{{ c.discount_type }}</td>
+                <td>{% if c.discount_type == 'percent' %}{{ c.discount_value|int }}%{% else %}₹{{ c.discount_value }}{% endif %}</td>
+                <td>₹{{ "{:,.2f}".format(c.min_order_amount) }}</td>
+                <td>
+                  {% if c.is_active %}
+                  <span style="color: var(--color-success); font-weight: 700;">ACTIVE</span>
+                  {% else %}
+                  <span style="color: var(--color-danger); font-weight: 700;">INACTIVE</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Add Product Modal -->
+  <div id="modalProduct" class="modal-overlay">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.3rem; font-weight: 800;">Add / Edit Product</h3>
+        <button onclick="AdminApp.closeModal('modalProduct')" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+      <form onsubmit="event.preventDefault(); AdminApp.saveProductForm();">
+        <input type="hidden" id="prodId" value="">
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">CATEGORY</label>
+          <select id="prodCategory" class="search-input">
+            {% for cat in categories %}
+            <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">PRODUCT NAME</label>
+          <input type="text" id="prodName" class="search-input" required>
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">SLUG (OPTIONAL)</label>
+          <input type="text" id="prodSlug" class="search-input">
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1rem;">
+          <div>
+            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">PRICE (₹)</label>
+            <input type="number" step="0.01" id="prodPrice" class="search-input" required>
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">DISCOUNT %</label>
+            <input type="number" step="0.1" id="prodDiscount" class="search-input" value="0">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">STOCK QTY</label>
+            <input type="number" id="prodStock" class="search-input" value="10" required>
+          </div>
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">SHORT DESCRIPTION</label>
+          <input type="text" id="prodShortDesc" class="search-input">
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">IMAGE URL</label>
+          <input type="text" id="prodImage" class="search-input" value="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&q=80">
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">FULL DESCRIPTION</label>
+          <textarea id="prodDesc" class="search-input" style="height: 60px;"></textarea>
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">SPECIFICATIONS</label>
+          <textarea id="prodSpecs" class="search-input" style="height: 60px;"></textarea>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+          <label style="font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+            <input type="checkbox" id="prodFeatured"> Featured
+          </label>
+          <label style="font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+            <input type="checkbox" id="prodTrending"> Trending
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Save Product</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Coupon Modal -->
+  <div id="modalCoupon" class="modal-overlay">
+    <div class="modal-content" style="max-width: 440px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.3rem; font-weight: 800;">Create Coupon</h3>
+        <button onclick="AdminApp.closeModal('modalCoupon')" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+      <form onsubmit="event.preventDefault(); AdminApp.saveCouponForm();">
+        <input type="hidden" id="couponId" value="">
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">COUPON CODE</label>
+          <input type="text" id="couponCode" class="search-input" placeholder="PROMO20" required style="text-transform: uppercase;">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+          <div>
+            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">TYPE</label>
+            <select id="couponType" class="search-input">
+              <option value="percent">Percent (%)</option>
+              <option value="flat">Flat (₹)</option>
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">DISCOUNT VALUE</label>
+            <input type="number" step="0.01" id="couponVal" class="search-input" value="10" required>
+          </div>
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">MINIMUM ORDER (₹)</label>
+          <input type="number" step="0.01" id="couponMin" class="search-input" value="499">
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">MAX DISCOUNT (₹)</label>
+          <input type="number" step="0.01" id="couponMax" class="search-input">
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+          <label style="font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+            <input type="checkbox" id="couponActive" checked> Active
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Save Coupon</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+  <script>
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-section').forEach(s => s.style.display = 'none');
+    document.querySelectorAll('.admin-nav-item').forEach(i => i.classList.remove('active'));
+    
+    document.getElementById(tabId).style.display = 'block';
+    event.currentTarget.classList.add('active');
+  }
+  </script>
+</body>
+</html>

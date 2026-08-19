@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Verify OTP{% endblock %}
+{% block content %}
+<section class="card auth-card reveal">
+    <p class="eyebrow">Verification</p>
+    <h1>Enter 6-digit OTP</h1>
+    <p class="subtitle">OTP has been sent to <strong>{{ identifier }}</strong></p>
+
+    <form action="{{ url_for('auth.verify_otp') }}" method="post" class="form-grid">
+        <label for="otp">OTP</label>
+        <input id="otp" name="otp" type="text" pattern="\d{6}" maxlength="6" required placeholder="123456" autocomplete="one-time-code">
+        <button type="submit" class="btn btn-primary">Verify OTP</button>
+    </form>
+
+    <a class="link" href="{{ url_for('auth.index') }}">Change phone/email</a>
+</section>
+{% endblock %}

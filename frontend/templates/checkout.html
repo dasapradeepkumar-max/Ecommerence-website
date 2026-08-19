@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+{% block title %}Checkout | TechTrend Secure Checkout{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 3rem 1.5rem;">
+  <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 2rem;">
+    <i class="bi bi-shield-check" style="color: var(--color-success);"></i> Secure Checkout
+  </h1>
+
+  <div style="display: grid; grid-template-columns: 1fr 360px; gap: 2.5rem;">
+    
+    <!-- Left Column: Address Selection + Payment Method -->
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
+      
+      <!-- Section 1: Delivery Address -->
+      <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 2rem;">
+        <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.6rem;">
+          <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--color-brand); color: #fff; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center;">1</span>
+          Select Delivery Address
+        </h3>
+
+        <div id="addressOptions" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
+          {% for addr in addresses %}
+          <label style="background: var(--bg-input); border: 1px solid {% if addr.is_default %}var(--color-brand){% else %}var(--border-light){% endif %}; border-radius: var(--radius-md); padding: 1.2rem; cursor: pointer; display: flex; gap: 1rem; align-items: flex-start;">
+            <input type="radio" name="selected_address" value="{{ addr.id }}" {% if addr.is_default or loop.first %}checked{% endif %} style="margin-top: 4px;">
+            <div>
+              <div style="font-weight: 800; color: var(--text-main); font-size: 0.98rem;">{{ addr.full_name }} ({{ addr.phone }})</div>
+              <div style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.2rem;">
+                {{ addr.address_line }}, {{ addr.city }}, {{ addr.state }} - {{ addr.pincode }}
+              </div>
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+
+        <button type="button" class="btn btn-outline btn-sm" onclick="toggleNewAddressForm()">
+          <i class="bi bi-plus-circle"></i> + Add New Address
+        </button>
+
+        <!-- New Address Form Collapsible -->
+        <div id="newAddressForm" style="display: none; margin-top: 1.5rem; background: var(--bg-input); border-radius: var(--radius-md); padding: 1.5rem;">
+          <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 1rem;">Add New Address</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+              <input type="text" id="newFullName" class="search-input" placeholder="Full Name" value="{{ user.get('full_name') or '' }}">
+            </div>
+            <div>
+              <input type="text" id="newPhone" class="search-input" placeholder="Phone Number" value="{{ user.get('phone') or '' }}">
+            </div>
+            <div style="grid-column: span 2;">
+              <input type="text" id="newAddressLine" class="search-input" placeholder="House/Flat No, Street, Landmark">
+            </div>
+            <div>
+              <input type="text" id="newCity" class="search-input" placeholder="City">
+            </div>
+            <div>
+              <input type="text" id="newState" class="search-input" placeholder="State">
+            </div>
+            <div style="grid-column: span 2;">
+              <input type="text" id="newPincode" class="search-input" placeholder="Pincode">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Payment Method Sandbox -->
+      <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 2rem;">
+        <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.6rem;">
+          <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--color-brand); color: #fff; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center;">2</span>
+          Select Payment Method
+        </h3>
+
+        <!-- Payment Method Tabs -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.5rem;">
+          <button type="button" class="cat-pill pay-tab active" onclick="switchPaymentTab('UPI')" id="tabUPI" style="justify-content: center; padding: 0.75rem;">
+            <i class="bi bi-qr-code-scan"></i> UPI Payment
+          </button>
+          <button type="button" class="cat-pill pay-tab" onclick="switchPaymentTab('CARD')" id="tabCARD" style="justify-content: center; padding: 0.75rem;">
+            <i class="bi bi-credit-card-2-front-fill"></i> Credit / Debit
+          </button>
+          <button type="button" class="cat-pill pay-tab" onclick="switchPaymentTab('COD')" id="tabCOD" style="justify-content: center; padding: 0.75rem;">
+            <i class="bi bi-cash-stack"></i> Cash on Delivery
+          </button>
+        </div>
+
+        <!-- UPI Tab Content -->
+        <div id="payContentUPI" class="pay-content">
+          <div style="background: var(--bg-input); border-radius: var(--radius-md); padding: 1.5rem; text-align: center;">
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem;">Enter your Virtual Payment Address (VPA) or scan simulated QR code</p>
+            <div style="width: 140px; height: 140px; background: #fff; border-radius: var(--radius-sm); margin: 0 auto 1.25rem; display: flex; align-items: center; justify-content: center; color: #000;">
+              <i class="bi bi-qr-code" style="font-size: 7rem;"></i>
+            </div>
+            <input type="text" id="inputUpiId" class="search-input" placeholder="e.g. user@upi or mobile@paytm" style="max-width: 320px; margin: 0 auto; text-align: center;" value="demo@upi">
+          </div>
+        </div>
+
+        <!-- Card Tab Content -->
+        <div id="payContentCARD" class="pay-content" style="display: none;">
+          <div style="background: var(--bg-input); border-radius: var(--radius-md); padding: 1.5rem;">
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">CARD NUMBER</label>
+              <input type="text" id="inputCardNumber" class="search-input" placeholder="4532 •••• •••• 8892" value="4532 8900 1234 8892">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div>
+                <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">EXPIRY DATE</label>
+                <input type="text" id="inputCardExpiry" class="search-input" placeholder="MM/YY" value="12/28">
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">CVV CODE</label>
+                <input type="password" id="inputCardCvv" class="search-input" placeholder="•••" maxlength="4" value="789">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COD Tab Content -->
+        <div id="payContentCOD" class="pay-content" style="display: none;">
+          <div style="background: var(--bg-input); border-radius: var(--radius-md); padding: 1.5rem; text-align: center;">
+            <i class="bi bi-hand-index-thumb-fill" style="font-size: 2.5rem; color: var(--color-success); margin-bottom: 0.5rem; display: inline-block;"></i>
+            <h4 style="font-weight: 800; font-size: 1.1rem; margin-bottom: 0.4rem;">Pay with Cash on Delivery</h4>
+            <p style="color: var(--text-muted); font-size: 0.88rem;">Pay in cash or UPI when your package arrives at your delivery doorstep.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Right Column: Order Summary -->
+    <div>
+      <div style="background: var(--bg-card); border: 1px solid var(--border-brand); border-radius: var(--radius-lg); padding: 1.8rem; position: sticky; top: 100px;">
+        <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-light); padding-bottom: 0.75rem;">
+          Order Summary
+        </h3>
+
+        <!-- Items Preview -->
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.25rem; max-height: 200px; overflow-y: auto;">
+          {% for item in cart.items %}
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.88rem;">
+            <div style="display: flex; align-items: center; gap: 0.6rem; max-width: 200px;">
+              <img src="{{ item.primary_image }}" alt="{{ item.name }}" style="width: 38px; height: 38px; object-fit: cover; border-radius: 6px;">
+              <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); font-weight: 600;">{{ item.name }}</span>
+            </div>
+            <span style="font-weight: 700; color: var(--color-accent);">{{ item.quantity }}x ₹{{ "{:,.2f}".format(item.effective_unit_price) }}</span>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div style="border-top: 1px solid var(--border-light); padding-top: 1rem; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.4rem; color: var(--text-muted);">
+            <span>Subtotal</span>
+            <span>₹{{ "{:,.2f}".format(cart.subtotal) }}</span>
+          </div>
+          {% if cart.coupon_discount > 0 %}
+          <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.4rem; color: var(--color-success);">
+            <span>Coupon Discount</span>
+            <span>-₹{{ "{:,.2f}".format(cart.coupon_discount) }}</span>
+          </div>
+          {% endif %}
+          <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.8rem; color: var(--text-muted);">
+            <span>Delivery Fee</span>
+            <span>{% if cart.delivery_fee == 0 %}FREE{% else %}₹{{ "{:,.2f}".format(cart.delivery_fee) }}{% endif %}</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border-light); padding-top: 0.8rem;">
+            <span style="font-size: 1.1rem; font-weight: 800;">Total Payable</span>
+            <span style="font-size: 1.6rem; font-weight: 800; color: var(--color-accent);">₹{{ "{:,.2f}".format(cart.final_total) }}</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-full" id="btnPlaceOrder" style="padding: 1rem;" onclick="processOrderPlacement()">
+          <i class="bi bi-bag-check-fill"></i> Place Order & Pay
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let activePaymentMethod = 'UPI';
+
+function toggleNewAddressForm() {
+  const form = document.getElementById('newAddressForm');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+function switchPaymentTab(method) {
+  activePaymentMethod = method;
+  document.querySelectorAll('.pay-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.pay-content').forEach(c => c.style.display = 'none');
+  
+  document.getElementById(`tab${method}`).classList.add('active');
+  document.getElementById(`payContent${method}`).style.display = 'block';
+}
+
+async function processOrderPlacement() {
+  const selectedAddr = document.querySelector('input[name="selected_address"]:checked');
+  let addressId = selectedAddr ? selectedAddr.value : null;
+  let newAddressObj = None;
+
+  const newFormVisible = document.getElementById('newAddressForm').style.display === 'block';
+  if (newFormVisible || !addressId) {
+    newAddressObj = {
+      full_name: document.getElementById('newFullName').value.trim(),
+      phone: document.getElementById('newPhone').value.trim(),
+      address_line: document.getElementById('newAddressLine').value.trim(),
+      city: document.getElementById('newCity').value.trim(),
+      state: document.getElementById('newState').value.trim(),
+      pincode: document.getElementById('newPincode').value.trim()
+    };
+  }
+
+  const payload = {
+    address_id: addressId,
+    new_address: newAddressObj,
+    payment_method: activePaymentMethod,
+    upi_id: document.getElementById('inputUpiId').value.trim(),
+    card_number: document.getElementById('inputCardNumber').value.trim(),
+    card_expiry: document.getElementById('inputCardExpiry').value.trim(),
+    card_cvv: document.getElementById('inputCardCvv').value.trim()
+  };
+
+  const btn = document.getElementById('btnPlaceOrder');
+  btn.disabled = true;
+  btn.innerText = 'Processing Order...';
+
+  try {
+    const res = await fetch('/api/checkout/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-bag-check-fill"></i> Place Order & Pay';
+
+    if (data.success) {
+      TechTrend.showToast('Payment verified & order placed!', 'success');
+      setTimeout(() => window.location.href = data.redirect_url, 800);
+    } else {
+      TechTrend.showToast(data.message, 'error');
+    }
+  } catch (err) {
+    btn.disabled = false;
+    TechTrend.showToast('Order processing failed.', 'error');
+  }
+}
+</script>
+{% endblock %}

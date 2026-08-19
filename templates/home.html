@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Home | E-Commerce{% endblock %}
+{% block content %}
+<section class="card home-card reveal">
+    <p class="eyebrow">E-Commerce</p>
+    <h1>Login Successfully</h1>
+    <p class="subtitle">Welcome to your shopping home page.</p>
+
+    {% if profile %}
+    <div class="profile-preview">
+        <h2>Saved Profile</h2>
+        <p><span>Name:</span> {{ profile.name }}</p>
+        <p><span>Contact:</span> {{ profile.email or profile.phone }}</p>
+        <p><span>Address:</span> {{ profile.address }}, {{ profile.city }}, {{ profile.state }} - {{ profile.pincode }}</p>
+    </div>
+    {% endif %}
+
+    <a class="btn btn-secondary" href="{{ url_for('auth.logout') }}">Logout</a>
+</section>
+{% endblock %}
