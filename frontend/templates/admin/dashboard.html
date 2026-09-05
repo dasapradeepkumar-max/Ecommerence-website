@@ -6,159 +6,236 @@
   <title>Admin Dashboard | TechTrend Store</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
 <body>
 
+  <!-- Overlay for Mobile Sidebar Drawer -->
+  <div id="sidebarOverlay" class="sidebar-overlay" onclick="AdminApp.toggleSidebar()"></div>
+
   <div class="admin-layout">
     
-    <!-- Sidebar -->
+    <!-- Sidebar Navigation -->
     <aside class="admin-sidebar">
-      <div class="brand-logo" style="margin-bottom: 2rem;">
-        <i class="bi bi-shield-check"></i>
-        <span>Admin</span>
+      <div class="brand-logo" style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <i class="bi bi-shield-check" style="font-size: 1.5rem; color: var(--color-brand);"></i>
+          <span style="font-weight: 800; font-size: 1.2rem;">TechTrend <span style="font-weight: 400; font-size: 0.85rem; color: var(--color-brand);">Admin</span></span>
+        </div>
       </div>
 
       <nav style="flex: 1;">
-        <div class="admin-nav-item active" onclick="switchTab('tabKPIs')">
-          <i class="bi bi-speedometer2"></i> Dashboard KPIs
+        <div class="admin-nav-item active" onclick="switchTab('tabKPIs', this)">
+          <i class="bi bi-speedometer2"></i> Dashboard Overview
         </div>
-        <div class="admin-nav-item" onclick="switchTab('tabProducts')">
-          <i class="bi bi-box-seam-fill"></i> Product Catalog
+        <div class="admin-nav-item" onclick="switchTab('tabProducts', this)">
+          <i class="bi bi-box-seam-fill"></i> Product Management
         </div>
-        <div class="admin-nav-item" onclick="switchTab('tabOrders')">
+        <div class="admin-nav-item" onclick="switchTab('tabOrders', this)">
           <i class="bi bi-bag-check-fill"></i> Customer Orders
         </div>
-        <div class="admin-nav-item" onclick="switchTab('tabCoupons')">
+        <div class="admin-nav-item" onclick="switchTab('tabCoupons', this)">
           <i class="bi bi-ticket-perforated-fill"></i> Coupons & Promos
         </div>
       </nav>
 
       <div style="border-top: 1px solid var(--border-light); padding-top: 1rem;">
-        <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">{{ session.get('admin_name') }}</div>
-        <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.75rem;">{{ session.get('admin_email') }}</div>
-        <a href="{{ url_for('admin.admin_logout') }}" class="btn btn-outline btn-sm btn-full" style="color: var(--color-danger);">
+        <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">{{ session.get('admin_name', 'Administrator') }}</div>
+        <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.75rem;">{{ session.get('admin_email', 'admin@techtrend.com') }}</div>
+        <a href="{{ url_for('admin.admin_logout') }}" class="btn btn-outline btn-sm btn-full" style="color: var(--color-danger); border-color: rgba(239,68,68,0.3);">
           <i class="bi bi-box-arrow-right"></i> Logout Admin
         </a>
       </div>
     </aside>
 
-    <!-- Main Section -->
-    <main style="padding: 2.5rem; overflow-y: auto;">
+    <!-- Main Content Area -->
+    <main style="padding: 2rem; overflow-y: auto;">
       
-      <!-- Top Bar -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-        <div>
-          <h1 style="font-size: 1.8rem; font-weight: 800;">E-Commerce Admin Dashboard</h1>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Real-time sales performance, inventory control, and order status updates</p>
+      <!-- Top Navbar & Mobile Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button class="mobile-nav-toggle" onclick="AdminApp.toggleSidebar()" title="Toggle Sidebar Navigation">
+            <i class="bi bi-list"></i>
+          </button>
+          <div>
+            <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--text-main);">Admin Control Panel</h1>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Inventory management, customer orders, and store analytics</p>
+          </div>
         </div>
-        <a href="{{ url_for('product.home_page') }}" target="_blank" class="btn btn-outline btn-sm">
-          <i class="bi bi-box-arrow-up-right"></i> View Live Store front
-        </a>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <a href="{{ url_for('product.home_page') }}" target="_blank" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+            <i class="bi bi-box-arrow-up-right"></i> Storefront Live
+          </a>
+        </div>
       </div>
 
       <!-- KPI Overview Grid -->
       <div id="tabKPIs" class="tab-section">
         <div class="kpi-grid">
           <div class="kpi-card">
-            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">TOTAL REVENUE</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px;">TOTAL REVENUE</div>
             <div class="kpi-val" style="color: var(--color-success);">₹{{ "{:,.2f}".format(kpis.total_revenue) }}</div>
-            <div style="font-size: 0.8rem; color: var(--text-dim);">Completed transactions</div>
+            <div style="font-size: 0.78rem; color: var(--text-dim);">Completed transactions</div>
           </div>
 
           <div class="kpi-card">
-            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">TOTAL ORDERS</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px;">TOTAL ORDERS</div>
             <div class="kpi-val" style="color: var(--color-accent);">{{ kpis.total_orders }}</div>
-            <div style="font-size: 0.8rem; color: var(--text-dim);">Customer purchases</div>
+            <div style="font-size: 0.78rem; color: var(--text-dim);">Customer purchases</div>
           </div>
 
           <div class="kpi-card">
-            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">ACTIVE USERS</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px;">ACTIVE USERS</div>
             <div class="kpi-val" style="color: var(--color-brand);">{{ kpis.total_users }}</div>
-            <div style="font-size: 0.8rem; color: var(--text-dim);">Registered accounts</div>
+            <div style="font-size: 0.78rem; color: var(--text-dim);">Registered user accounts</div>
           </div>
 
           <div class="kpi-card">
-            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">LOW STOCK ALERTS</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px;">LOW STOCK ALERTS</div>
             <div class="kpi-val" style="color: var(--color-warning);">{{ kpis.low_stock_count }}</div>
-            <div style="font-size: 0.8rem; color: var(--text-dim);">Items with ≤ 10 units</div>
+            <div style="font-size: 0.78rem; color: var(--text-dim);">Items with ≤ 10 units</div>
           </div>
         </div>
 
         <!-- Low Stock Table -->
         {% if low_stock %}
-        <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1.5rem; margin-top: 2rem;">
-          <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--color-warning); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-            <i class="bi bi-exclamation-triangle-fill"></i> Low Stock Inventory Warning
+        <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1.5rem; margin-top: 1.5rem;">
+          <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--color-warning); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="bi bi-exclamation-triangle-fill"></i> Low Stock Inventory Alert
           </h3>
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Category</th>
-                <th>Price</th>
-                <th>Current Stock</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for p in low_stock %}
-              <tr>
-                <td style="font-weight: 700; color: var(--text-main);">{{ p.name }}</td>
-                <td>{{ p.category_name }}</td>
-                <td>₹{{ "{:,.2f}".format(p.price) }}</td>
-                <td style="font-weight: 800; color: var(--color-warning);">{{ p.stock }} units</td>
-                <td><span class="product-badge" style="position: static; background: var(--color-warning);">REORDER SOON</span></td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for p in low_stock %}
+                <tr>
+                  <td style="font-weight: 700; color: var(--text-main);">{{ p.name }}</td>
+                  <td>{{ p.category_name }}</td>
+                  <td>₹{{ "{:,.2f}".format(p.price) }}</td>
+                  <td><span class="badge badge-lowstock">{{ p.stock }} units left</span></td>
+                  <td>
+                    <button class="btn btn-outline btn-sm" onclick="switchTab('tabProducts'); AdminApp.openEditModal({{ p.id }})">Update Stock</button>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
         {% endif %}
       </div>
 
       <!-- Products Management Section -->
       <div id="tabProducts" class="tab-section" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-          <h3 style="font-size: 1.25rem; font-weight: 800;">Manage Products</h3>
-          <button class="btn btn-primary btn-sm" onclick="AdminApp.showModal('modalProduct')">+ Add New Product</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <h3 style="font-size: 1.3rem; font-weight: 800; margin: 0;">Product Catalog Management</h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">Add, edit, deactivate, filter, and manage inventory</p>
+          </div>
+          <button class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;" onclick="AdminApp.openAddModal()">
+            <i class="bi bi-plus-lg"></i> Add New Product
+          </button>
         </div>
 
-        <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); overflow-x: auto;">
+        <!-- Filter & Search Bar Toolbar -->
+        <div class="filter-toolbar">
+          <div class="search-box-wrapper">
+            <i class="bi bi-search"></i>
+            <input type="text" id="adminSearchInput" class="search-input" placeholder="Search by name, description or category...">
+            <button class="clear-search" onclick="AdminApp.clearSearch()" title="Clear search">&times;</button>
+          </div>
+
+          <div class="filter-group">
+            <!-- Category Filter -->
+            <select id="filterCategory" title="Filter by Category">
+              <option value="all">All Categories</option>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}">{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+
+            <!-- Status Filter -->
+            <select id="filterStatus" title="Filter by Status">
+              <option value="all">All Statuses</option>
+              <option value="active">Active Only</option>
+              <option value="inactive">Inactive Only</option>
+            </select>
+
+            <!-- Stock Filter -->
+            <select id="filterStock" title="Filter by Stock Level">
+              <option value="all">All Stock Levels</option>
+              <option value="in_stock">In Stock (>0)</option>
+              <option value="low_stock">Low Stock (1-10)</option>
+              <option value="out_of_stock">Out of Stock (0)</option>
+            </select>
+
+            <!-- Sort Selector -->
+            <select id="filterSort" title="Sort Products">
+              <option value="newest">Sort: Newest First</option>
+              <option value="oldest">Sort: Oldest First</option>
+              <option value="name_asc">Name: A to Z</option>
+              <option value="name_desc">Name: Z to A</option>
+              <option value="price_asc">Orig Price: Low to High</option>
+              <option value="price_desc">Orig Price: High to Low</option>
+              <option value="final_price_asc">Final Price: Low to High</option>
+              <option value="final_price_desc">Final Price: High to Low</option>
+              <option value="stock_asc">Stock: Low to High</option>
+              <option value="stock_desc">Stock: High to Low</option>
+            </select>
+
+            <!-- Per Page Limit -->
+            <select id="filterLimit" title="Items per page" style="width: auto;">
+              <option value="10">10 per page</option>
+              <option value="25">25 per page</option>
+              <option value="50">50 per page</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Products Data Table -->
+        <div class="table-container">
           <table class="admin-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Name</th>
+                <th>Image</th>
+                <th>Product Name</th>
                 <th>Category</th>
-                <th>Price</th>
+                <th>Original Price</th>
+                <th>Discount %</th>
+                <th>Final Price</th>
                 <th>Stock</th>
-                <th>Rating</th>
+                <th>Status</th>
+                <th>Created</th>
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              {% for p in products %}
-              <tr>
-                <td>#{{ p.id }}</td>
-                <td style="font-weight: 700; color: var(--text-main);">{{ p.name }}</td>
-                <td>{{ p.category_name }}</td>
-                <td>₹{{ "{:,.2f}".format(p.price) }}</td>
-                <td>{{ p.stock }}</td>
-                <td>★ {{ p.avg_rating }}</td>
-                <td>
-                  <button class="btn btn-outline btn-sm" style="color: var(--color-danger);" onclick="AdminApp.deleteProduct({{ p.id }})">Deactivate</button>
-                </td>
-              </tr>
-              {% endfor %}
+            <tbody id="productsTableBody">
+              <!-- Rendered via AdminApp.loadProducts() -->
             </tbody>
           </table>
+
+          <!-- Pagination Bar -->
+          <div class="pagination-bar">
+            <div id="paginationInfo">Showing products...</div>
+            <div id="paginationControls" class="pagination-controls">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Orders Management Section -->
       <div id="tabOrders" class="tab-section" style="display: none;">
         <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.5rem;">Manage Customer Orders</h3>
-        <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); overflow-x: auto;">
+        <div class="table-container">
           <table class="admin-table">
             <thead>
               <tr>
@@ -188,7 +265,7 @@
                   </select>
                 </td>
                 <td>
-                  <span class="product-badge" style="position: static; background: var(--color-brand);">ACTIVE</span>
+                  <span class="badge badge-active">ACTIVE</span>
                 </td>
               </tr>
               {% endfor %}
@@ -204,7 +281,7 @@
           <button class="btn btn-primary btn-sm" onclick="AdminApp.showModal('modalCoupon')">+ Create Coupon</button>
         </div>
 
-        <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); overflow-x: auto;">
+        <div class="table-container">
           <table class="admin-table">
             <thead>
               <tr>
@@ -224,9 +301,9 @@
                 <td>₹{{ "{:,.2f}".format(c.min_order_amount) }}</td>
                 <td>
                   {% if c.is_active %}
-                  <span style="color: var(--color-success); font-weight: 700;">ACTIVE</span>
+                  <span class="badge badge-active">ACTIVE</span>
                   {% else %}
-                  <span style="color: var(--color-danger); font-weight: 700;">INACTIVE</span>
+                  <span class="badge badge-inactive">INACTIVE</span>
                   {% endif %}
                 </td>
               </tr>
@@ -239,106 +316,202 @@
     </main>
   </div>
 
-  <!-- Add Product Modal -->
+  <!-- Add / Edit Product Modal -->
   <div id="modalProduct" class="modal-overlay">
     <div class="modal-content">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <h3 style="font-size: 1.3rem; font-weight: 800;">Add / Edit Product</h3>
-        <button onclick="AdminApp.closeModal('modalProduct')" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      <div class="modal-header">
+        <h3 id="prodModalTitle" class="modal-title">Add New Product</h3>
+        <button onclick="AdminApp.closeModal('modalProduct')" class="modal-close">&times;</button>
       </div>
       <form onsubmit="event.preventDefault(); AdminApp.saveProductForm();">
         <input type="hidden" id="prodId" value="">
-        <div style="margin-bottom: 1rem;">
-          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">CATEGORY</label>
-          <select id="prodCategory" class="search-input">
-            {% for cat in categories %}
-            <option value="{{ cat.id }}">{{ cat.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div style="margin-bottom: 1rem;">
-          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">PRODUCT NAME</label>
-          <input type="text" id="prodName" class="search-input" required>
-        </div>
-        <div style="margin-bottom: 1rem;">
-          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">SLUG (OPTIONAL)</label>
-          <input type="text" id="prodSlug" class="search-input">
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1rem;">
+
+        <!-- Category & Status -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
           <div>
-            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">PRICE (₹)</label>
-            <input type="number" step="0.01" id="prodPrice" class="search-input" required>
+            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">CATEGORY *</label>
+            <select id="prodCategory" class="search-input" required>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}">{{ cat.name }}</option>
+              {% endfor %}
+            </select>
           </div>
           <div>
-            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">DISCOUNT %</label>
-            <input type="number" step="0.1" id="prodDiscount" class="search-input" value="0">
+            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">PRODUCT STATUS</label>
+            <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+              <label style="font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+                <input type="radio" name="prodStatus" id="prodStatusActive" checked> <span style="color: var(--color-success); font-weight: 700;">Active</span>
+              </label>
+              <label style="font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+                <input type="radio" name="prodStatus" id="prodStatusInactive"> <span style="color: var(--color-danger); font-weight: 700;">Inactive</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product Name & Slug -->
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">PRODUCT NAME *</label>
+          <input type="text" id="prodName" class="search-input" placeholder="e.g. Wireless Noise-Cancelling Headphones" required>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">URL SLUG (OPTIONAL AUTO-GENERATED)</label>
+          <input type="text" id="prodSlug" class="search-input" placeholder="wireless-noise-cancelling-headphones">
+        </div>
+
+        <!-- Price, Discount, Stock Grid -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 0.75rem;">
+          <div>
+            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">ORIGINAL PRICE (₹) *</label>
+            <input type="number" step="0.01" min="0" id="prodPrice" class="search-input" placeholder="10000" required>
           </div>
           <div>
-            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">STOCK QTY</label>
-            <input type="number" id="prodStock" class="search-input" value="10" required>
+            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">DISCOUNT (%)</label>
+            <input type="number" step="0.1" min="0" max="100" id="prodDiscount" class="search-input" value="0">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">STOCK QUANTITY *</label>
+            <input type="number" min="0" id="prodStock" class="search-input" value="10" required>
           </div>
         </div>
+
+        <!-- Live Final Price Calculation Box -->
+        <div style="background: var(--bg-input); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 0.75rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">CALCULATED FINAL PRICE:</span>
+          <div id="prodFinalPricePreview" style="font-weight: 700; font-size: 0.95rem;">
+            <span style="color: var(--text-dim);">₹0.00</span>
+          </div>
+        </div>
+
+        <!-- Short & Full Description -->
         <div style="margin-bottom: 1rem;">
-          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">SHORT DESCRIPTION</label>
-          <input type="text" id="prodShortDesc" class="search-input">
+          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">SHORT DESCRIPTION</label>
+          <input type="text" id="prodShortDesc" class="search-input" placeholder="Brief 1-sentence product summary">
         </div>
+
         <div style="margin-bottom: 1rem;">
-          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">IMAGE URL</label>
-          <input type="text" id="prodImage" class="search-input" value="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&q=80">
+          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">FULL DESCRIPTION</label>
+          <textarea id="prodDesc" class="search-input" style="height: 65px;" placeholder="Detailed product overview and key features"></textarea>
         </div>
+
         <div style="margin-bottom: 1rem;">
-          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">FULL DESCRIPTION</label>
-          <textarea id="prodDesc" class="search-input" style="height: 60px;"></textarea>
+          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">SPECIFICATIONS</label>
+          <textarea id="prodSpecs" class="search-input" style="height: 55px;" placeholder="Key specifications (e.g. Battery: 30hrs, Weight: 250g)"></textarea>
         </div>
-        <div style="margin-bottom: 1.5rem;">
-          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">SPECIFICATIONS</label>
-          <textarea id="prodSpecs" class="search-input" style="height: 60px;"></textarea>
+
+        <!-- Image Upload & URL Input -->
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">PRODUCT IMAGE (UPLOAD OR URL)</label>
+
+          <!-- Upload Dropzone -->
+          <div class="image-upload-zone" onclick="document.getElementById('prodFileInput').click()">
+            <i class="bi bi-cloud-arrow-up" style="font-size: 1.5rem; color: var(--color-brand);"></i>
+            <div style="font-size: 0.82rem; font-weight: 700; margin-top: 0.2rem;">Click to upload image file</div>
+            <div style="font-size: 0.72rem; color: var(--text-dim);">PNG, JPG, JPEG, WEBP or SVG (Max 5MB)</div>
+            <input type="file" id="prodFileInput" accept="image/*" style="display: none;" onchange="AdminApp.uploadImageFile(this)">
+          </div>
+          <div id="uploadStatusMsg" style="font-size: 0.75rem; color: var(--color-accent); margin-top: 0.2rem;"></div>
+
+          <div style="margin-top: 0.6rem;">
+            <input type="text" id="prodImage" class="search-input" placeholder="Or paste image web URL (https://...)" value="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&q=80">
+          </div>
+
+          <!-- Image Preview Thumbnail -->
+          <div id="prodImagePreviewContainer" class="img-preview-box" style="display: none;">
+            <img id="prodImagePreview" src="" alt="Product Preview">
+          </div>
         </div>
-        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+
+        <!-- Checkboxes -->
+        <div style="display: flex; gap: 1.5rem; margin-bottom: 1.5rem;">
           <label style="font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
-            <input type="checkbox" id="prodFeatured"> Featured
+            <input type="checkbox" id="prodFeatured"> Featured Product
           </label>
           <label style="font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
-            <input type="checkbox" id="prodTrending"> Trending
+            <input type="checkbox" id="prodTrending"> Trending Product
           </label>
         </div>
-        <button type="submit" class="btn btn-primary btn-full">Save Product</button>
+
+        <button type="submit" class="btn btn-primary btn-full">Save Product Details</button>
       </form>
+    </div>
+  </div>
+
+  <!-- View Product Detail Modal -->
+  <div id="modalViewProduct" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Product Details Preview</h3>
+        <button onclick="AdminApp.closeModal('modalViewProduct')" class="modal-close">&times;</button>
+      </div>
+      <div id="viewModalBody">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="modalDeleteConfirm" class="modal-overlay">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--color-danger); display: flex; align-items: center; gap: 0.5rem;">
+          <i class="bi bi-exclamation-triangle-fill"></i> Delete Confirmation
+        </h3>
+        <button onclick="AdminApp.closeModal('modalDeleteConfirm')" class="modal-close">&times;</button>
+      </div>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
+        Are you sure you want to remove product <strong id="deleteProdName" style="color: var(--text-main);"></strong>?
+      </p>
+      <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1.5rem;">
+        Choose <strong>Deactivate</strong> to keep past order history intact while hiding it from the customer store, or <strong>Delete Permanently</strong>.
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+        <button class="btn btn-outline btn-full" style="color: var(--color-warning); border-color: var(--color-warning);" onclick="AdminApp.confirmDelete(false)">
+          Deactivate Product (Recommended)
+        </button>
+        <button class="btn btn-primary btn-full" style="background: var(--color-danger);" onclick="AdminApp.confirmDelete(true)">
+          Delete Permanently
+        </button>
+        <button class="btn btn-outline btn-full" onclick="AdminApp.closeModal('modalDeleteConfirm')">
+          Cancel
+        </button>
+      </div>
     </div>
   </div>
 
   <!-- Add Coupon Modal -->
   <div id="modalCoupon" class="modal-overlay">
     <div class="modal-content" style="max-width: 440px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <h3 style="font-size: 1.3rem; font-weight: 800;">Create Coupon</h3>
-        <button onclick="AdminApp.closeModal('modalCoupon')" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      <div class="modal-header">
+        <h3 class="modal-title">Create Coupon</h3>
+        <button onclick="AdminApp.closeModal('modalCoupon')" class="modal-close">&times;</button>
       </div>
       <form onsubmit="event.preventDefault(); AdminApp.saveCouponForm();">
         <input type="hidden" id="couponId" value="">
         <div style="margin-bottom: 1rem;">
-          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">COUPON CODE</label>
+          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">COUPON CODE</label>
           <input type="text" id="couponCode" class="search-input" placeholder="PROMO20" required style="text-transform: uppercase;">
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
           <div>
-            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">TYPE</label>
+            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">TYPE</label>
             <select id="couponType" class="search-input">
               <option value="percent">Percent (%)</option>
               <option value="flat">Flat (₹)</option>
             </select>
           </div>
           <div>
-            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">DISCOUNT VALUE</label>
+            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">DISCOUNT VALUE</label>
             <input type="number" step="0.01" id="couponVal" class="search-input" value="10" required>
           </div>
         </div>
         <div style="margin-bottom: 1rem;">
-          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">MINIMUM ORDER (₹)</label>
+          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">MINIMUM ORDER (₹)</label>
           <input type="number" step="0.01" id="couponMin" class="search-input" value="499">
         </div>
         <div style="margin-bottom: 1rem;">
-          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">MAX DISCOUNT (₹)</label>
+          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">MAX DISCOUNT (₹)</label>
           <input type="number" step="0.01" id="couponMax" class="search-input">
         </div>
         <div style="margin-bottom: 1.5rem;">
@@ -355,12 +528,22 @@
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
   <script>
-  function switchTab(tabId) {
+  function switchTab(tabId, el) {
     document.querySelectorAll('.tab-section').forEach(s => s.style.display = 'none');
     document.querySelectorAll('.admin-nav-item').forEach(i => i.classList.remove('active'));
     
     document.getElementById(tabId).style.display = 'block';
-    event.currentTarget.classList.add('active');
+    if (el) el.classList.add('active');
+
+    // Close mobile drawer if open
+    const sidebar = document.querySelector('.admin-sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar) sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('active');
+
+    if (tabId === 'tabProducts' && window.AdminApp) {
+      AdminApp.loadProducts(1);
+    }
   }
   </script>
 </body>
