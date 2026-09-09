@@ -45,6 +45,18 @@ class Admin:
         )
 
     @classmethod
+    def get_all_users(cls):
+        return Database.query_all(
+            """
+            SELECT u.*, 
+                   (SELECT COUNT(*) FROM orders WHERE user_id = u.id) as total_orders,
+                   (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE user_id = u.id AND status != 'Cancelled') as total_spent
+            FROM users u
+            ORDER BY u.id DESC
+            """
+        )
+
+    @classmethod
     def get_all_orders(cls):
         orders = Database.query_all(
             """

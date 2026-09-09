@@ -49,6 +49,7 @@ def admin_dashboard():
     categories = Product.get_categories()
     orders = Admin.get_all_orders()
     coupons = Admin.get_coupons()
+    users = Admin.get_all_users()
 
     return render_template(
         "admin/dashboard.html",
@@ -58,8 +59,19 @@ def admin_dashboard():
         categories=categories,
         orders=orders,
         coupons=coupons,
+        users=users,
         statuses=Order.STATUS_TIMELINE
     )
+
+
+@admin_bp.route("/api/users", methods=["GET"])
+def api_get_users():
+    if not _is_admin():
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+
+    users = Admin.get_all_users()
+    return jsonify({"success": True, "users": users, "total_count": len(users)})
+
 
 
 @admin_bp.route("/api/products", methods=["GET"])

@@ -37,6 +37,9 @@
         <div class="admin-nav-item" onclick="switchTab('tabCoupons', this)">
           <i class="bi bi-ticket-perforated-fill"></i> Coupons & Promos
         </div>
+        <div class="admin-nav-item" onclick="switchTab('tabUsers', this)">
+          <i class="bi bi-people-fill"></i> Registered Users
+        </div>
       </nav>
 
       <div style="border-top: 1px solid var(--border-light); padding-top: 1rem;">
@@ -84,10 +87,10 @@
             <div style="font-size: 0.78rem; color: var(--text-dim);">Customer purchases</div>
           </div>
 
-          <div class="kpi-card">
+          <div class="kpi-card" onclick="switchTab('tabUsers', document.querySelectorAll('.admin-nav-item')[4])" style="cursor: pointer;" title="Click to view all registered users">
             <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px;">ACTIVE USERS</div>
             <div class="kpi-val" style="color: var(--color-brand);">{{ kpis.total_users }}</div>
-            <div style="font-size: 0.78rem; color: var(--text-dim);">Registered user accounts</div>
+            <div style="font-size: 0.78rem; color: var(--text-dim);">Registered user accounts (Click to view)</div>
           </div>
 
           <div class="kpi-card">
@@ -310,6 +313,69 @@
               {% endfor %}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Registered Users Tab -->
+      <div id="tabUsers" class="tab-section" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--text-main);">Registered Customers</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">All registered users and new incoming signups on your platform</p>
+          </div>
+          <div style="font-size: 0.88rem; font-weight: 700; background: var(--bg-card); padding: 0.6rem 1.2rem; border-radius: var(--radius-md); border: 1px solid var(--border-light); display: flex; align-items: center; gap: 0.5rem;">
+            <i class="bi bi-person-fill" style="color: var(--color-brand);"></i> Total Registered Users: <span style="color: var(--color-brand); font-weight: 800; font-size: 1.05rem;">{{ users|length if users else 0 }}</span>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); overflow: hidden;">
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>User ID</th>
+                  <th>Customer Name</th>
+                  <th>Email & Contact</th>
+                  <th>Profile Status</th>
+                  <th>Registered On</th>
+                  <th>Last Login</th>
+                  <th>Orders</th>
+                  <th style="text-align: right;">Total Spent</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if users %}
+                {% for u in users %}
+                <tr>
+                  <td><span class="badge" style="background: rgba(99,102,241,0.15); color: var(--color-brand); font-weight: 800;">#USR-{{ "%04d"|format(u.id) }}</span></td>
+                  <td>
+                    <div style="font-weight: 700; color: var(--text-main);">{{ u.full_name if u.full_name else 'New Customer' }}</div>
+                  </td>
+                  <td>
+                    <div><i class="bi bi-envelope" style="color: var(--text-dim);"></i> {{ u.email or 'N/A' }}</div>
+                    {% if u.phone %}<div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 2px;"><i class="bi bi-phone"></i> {{ u.phone }}</div>{% endif %}
+                  </td>
+                  <td>
+                    {% if u.is_profile_complete %}
+                    <span class="badge badge-active">Profile Complete</span>
+                    {% else %}
+                    <span class="badge badge-warning">Pending Details</span>
+                    {% endif %}
+                  </td>
+                  <td style="color: var(--text-muted); font-size: 0.82rem;">{{ u.created_at }}</td>
+                  <td style="color: var(--text-muted); font-size: 0.82rem;">{{ u.last_login or 'N/A' }}</td>
+                  <td><span class="badge" style="background: var(--bg-input); font-weight: 700; color: var(--text-main);">{{ u.total_orders }} orders</span></td>
+                  <td style="text-align: right; font-weight: 800; color: var(--color-success);">₹{{ "{:,.2f}".format(u.total_spent) }}</td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                  <td colspan="8" style="padding: 2.5rem; text-align: center; color: var(--text-muted);">No registered users found yet.</td>
+                </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
