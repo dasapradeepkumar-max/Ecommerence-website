@@ -619,6 +619,216 @@ const AdminApp = {
     } catch (err) {
       TechTrend.showToast('Error saving coupon.', 'error');
     }
+  },
+
+  async openCustomerDetailModal(userId) {
+    const modalBody = document.getElementById('customerModalBody');
+    if (modalBody) {
+      modalBody.innerHTML = `
+        <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+          <div class="skeleton-box" style="height: 30px; margin-bottom: 1rem; width: 60%; margin-left: auto; margin-right: auto;"></div>
+          <div class="skeleton-box" style="height: 120px; margin-bottom: 1rem;"></div>
+          <div class="skeleton-box" style="height: 200px;"></div>
+        </div>
+      `;
+    }
+    this.showModal('modalCustomerDetail');
+
+    try {
+      const res = await fetch(`/admin/api/customers/${userId}`);
+      const data = await res.json();
+      if (!data.success || !data.customer) {
+        TechTrend.showToast(data.message || 'Could not fetch customer details.', 'error');
+        this.closeModal('modalCustomerDetail');
+        return;
+      }
+
+      const c = data.customer;
+      const u = c.user || {};
+      const addresses = c.addresses || [];
+      const loginHistory = c.login_history || [];
+      const orders = c.orders || [];
+
+      const userCode = u.user_code || `USR-${String(u.id).padStart(6, '0')}`;
+      const fullName = u.full_name || 'New Customer';
+      const email = u.email || 'N/A';
+      const phone = u.phone || 'N/A';
+      const isComplete = !!u.is_profile_complete;
+      const loginCount = c.login_count || u.login_count || loginHistory.length || 1;
+      const lastLogin = u.last_login || (loginHistory[0] ? loginHistory[0].login_at : 'N/A');
+      const registeredOn = u.created_at || 'N/A';
+      const totalSpent = parseFloat(c.total_spent || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      let defaultAddressStr = 'No address on file';
+      if (addresses.length > 0) {
+        const addr = addresses.find(a => a.is_default) || addresses[0];
+        defaultAddressStr = `${addr.address_line || ''}, ${addr.city || ''}, ${addr.state || ''} - ${addr.pincode || ''}`;
+      }
+
+      // Login history HTML
+      let loginLogsHtml = '';
+      if (loginHistory.length === 0) {
+        loginLogsHtml = `
+          <tr>
+            <td colspan="3" style="text-align: center; padding: 1rem; color: var(--text-dim);">No login activity logged yet.</td>
+          </tr>
+        `;
+      } else {
+        loginLogsHtml = loginHistory.map((log, idx) => `
+          <tr>
+            <td style="font-weight: 700; color: var(--text-dim); width: 40px;">#${loginHistory.length - idx}</td>
+            <td style="font-weight: 700; color: var(--text-main); white-space: nowrap;"><i class="bi bi-clock-history" style="color: var(--color-brand);"></i> ${log.login_at || 'N/A'}</td>
+            <td style="font-size: 0.8rem; color: var(--text-dim);">${log.ip_address || '127.0.0.1'} ${log.user_agent ? `&bull; ${log.user_agent.substring(0, 45)}...` : ''}</td>
+          </tr>
+        `).join('');
+      }
+
+      // Orders HTML
+      let ordersHtml = '';
+      if (orders.length === 0) {
+        ordersHtml = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+              <i class="bi bi-bag-x" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+              No orders placed by this customer yet.
+            </td>
+          </tr>
+        `;
+      } else {
+        ordersHtml = orders.map(ord => {
+          const ordAmount = parseFloat(ord.total_amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const itemsSummary = (ord.order_items || []).map(it => `${it.name} (x${it.quantity})`).join(', ');
+
+          let statusBadge = 'badge-active';
+          if (ord.status === 'Delivered') statusBadge = 'badge-instock';
+          else if (ord.status === 'Cancelled') statusBadge = 'badge-inactive';
+          else if (ord.status === 'Shipped' || ord.status === 'Out for Delivery') statusBadge = 'badge-lowstock';
+
+          return `
+            <tr>
+              <td style="font-weight: 800; color: var(--color-accent); white-space: nowrap;">${ord.order_number}</td>
+              <td style="font-size: 0.82rem; color: var(--text-muted); white-space: nowrap;"><i class="bi bi-calendar3"></i> ${ord.created_at || 'N/A'}</td>
+              <td style="font-size: 0.85rem; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${itemsSummary}">${itemsSummary || 'Items'}</td>
+              <td style="font-weight: 800; color: var(--color-success); white-space: nowrap;">₹${ordAmount}</td>
+              <td style="font-size: 0.82rem; white-space: nowrap;">${ord.payment_method || 'N/A'} (${ord.payment_status || 'SUCCESS'})</td>
+              <td><span class="badge ${statusBadge}">${ord.status}</span></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      if (modalBody) {
+        modalBody.innerHTML = `
+          <!-- Customer Header Profile Box -->
+          <div style="background: var(--bg-input); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.3rem;">
+                  <span class="badge" style="background: rgba(99,102,241,0.2); color: var(--color-brand); font-weight: 800; font-size: 0.9rem; padding: 0.3rem 0.6rem;">
+                    <i class="bi bi-person-vcard"></i> ${userCode}
+                  </span>
+                  <span class="badge ${isComplete ? 'badge-active' : 'badge-warning'}">
+                    ${isComplete ? 'Profile Complete' : 'Profile Pending'}
+                  </span>
+                </div>
+                <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0; color: var(--text-main);">${fullName}</h2>
+              </div>
+
+              <!-- Quick Metrics Badges -->
+              <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                <div style="background: var(--bg-card); border: 1px solid var(--border-light); padding: 0.5rem 0.8rem; border-radius: var(--radius-md); text-align: center;">
+                  <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-dim);">TOTAL LOGINS</div>
+                  <div style="font-size: 1.1rem; font-weight: 800; color: var(--color-brand);">${loginCount}</div>
+                </div>
+                <div style="background: var(--bg-card); border: 1px solid var(--border-light); padding: 0.5rem 0.8rem; border-radius: var(--radius-md); text-align: center;">
+                  <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-dim);">TOTAL ORDERS</div>
+                  <div style="font-size: 1.1rem; font-weight: 800; color: var(--color-accent);">${c.total_orders || orders.length}</div>
+                </div>
+                <div style="background: var(--bg-card); border: 1px solid var(--border-light); padding: 0.5rem 0.8rem; border-radius: var(--radius-md); text-align: center;">
+                  <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-dim);">TOTAL SPENT</div>
+                  <div style="font-size: 1.1rem; font-weight: 800; color: var(--color-success);">₹${totalSpent}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Customer Details Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; border-top: 1px solid var(--border-light); padding-top: 0.85rem; font-size: 0.85rem;">
+              <div>
+                <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block;">EMAIL ADDRESS</span>
+                <span style="font-weight: 600; color: var(--text-main);"><i class="bi bi-envelope" style="color: var(--text-dim);"></i> ${email}</span>
+              </div>
+              <div>
+                <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block;">PHONE NUMBER</span>
+                <span style="font-weight: 600; color: var(--text-main);"><i class="bi bi-telephone" style="color: var(--text-dim);"></i> ${phone}</span>
+              </div>
+              <div>
+                <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block;">REGISTERED ON</span>
+                <span style="color: var(--text-muted);">${registeredOn}</span>
+              </div>
+              <div>
+                <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block;">LAST LOGIN TIME</span>
+                <span style="color: var(--color-brand); font-weight: 700;">${lastLogin}</span>
+              </div>
+            </div>
+
+            <div style="margin-top: 0.75rem; font-size: 0.83rem;">
+              <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block;">DEFAULT DELIVERY ADDRESS</span>
+              <span style="color: var(--text-muted);"><i class="bi bi-geo-alt" style="color: var(--color-accent);"></i> ${defaultAddressStr}</span>
+            </div>
+          </div>
+
+          <!-- Section 1: Complete Login Activity History -->
+          <div style="margin-bottom: 1.75rem;">
+            <h4 style="font-size: 1rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between;">
+              <span><i class="bi bi-activity" style="color: var(--color-success);"></i> Login Activity History</span>
+              <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-dim);">Total Logins: ${loginCount}</span>
+            </h4>
+            <div style="max-height: 180px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: var(--radius-md);">
+              <table class="admin-table" style="font-size: 0.85rem;">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Login Date & Time</th>
+                    <th>IP / Device Info</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${loginLogsHtml}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Section 2: Customer Orders History -->
+          <div>
+            <h4 style="font-size: 1rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between;">
+              <span><i class="bi bi-box-seam" style="color: var(--color-accent);"></i> All Customer Orders (${orders.length})</span>
+              <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-success);">Total Completed Spent: ₹${totalSpent}</span>
+            </h4>
+            <div style="max-height: 240px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: var(--radius-md);">
+              <table class="admin-table" style="font-size: 0.85rem;">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Order Date & Time</th>
+                    <th>Products</th>
+                    <th>Amount</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${ordersHtml}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+    } catch (err) {
+      console.error("Error opening customer detail:", err);
+      TechTrend.showToast('Error loading customer activity details.', 'error');
+    }
   }
 };
 

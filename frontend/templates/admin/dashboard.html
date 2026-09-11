@@ -38,7 +38,7 @@
           <i class="bi bi-ticket-perforated-fill"></i> Coupons & Promos
         </div>
         <div class="admin-nav-item" onclick="switchTab('tabUsers', this)">
-          <i class="bi bi-people-fill"></i> Registered Users
+          <i class="bi bi-people-fill"></i> Customers
         </div>
       </nav>
 
@@ -253,9 +253,21 @@
             <tbody>
               {% for ord in orders %}
               <tr>
-                <td style="font-weight: 800; color: var(--color-accent);">{{ ord.order_number }}</td>
+                <td style="font-weight: 800; color: var(--color-accent);">
+                  {{ ord.order_number }}
+                  <div style="font-size: 0.73rem; font-weight: 500; color: var(--text-dim); margin-top: 2px;">
+                    <i class="bi bi-clock"></i> {{ ord.created_at }}
+                  </div>
+                </td>
                 <td>
-                  <div style="font-weight: 700;">{{ ord.customer_name }}</div>
+                  <div style="margin-bottom: 0.2rem;">
+                    <button class="badge" style="background: rgba(99,102,241,0.15); color: var(--color-brand); font-weight: 800; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem;" onclick="AdminApp.openCustomerDetailModal({{ ord.user_id }})" title="Click to view customer details">
+                      <i class="bi bi-person-vcard"></i> {{ ord.customer_user_code }}
+                    </button>
+                  </div>
+                  <a href="javascript:void(0)" onclick="AdminApp.openCustomerDetailModal({{ ord.user_id }})" style="font-weight: 700; color: var(--text-main); text-decoration: none;" title="Click to view customer details">
+                    {{ ord.customer_name or 'Customer' }}
+                  </a>
                   <div style="font-size: 0.75rem; color: var(--text-dim);">{{ ord.customer_phone or ord.customer_email }}</div>
                 </td>
                 <td style="font-weight: 800;">₹{{ "{:,.2f}".format(ord.total_amount) }}</td>
@@ -268,7 +280,9 @@
                   </select>
                 </td>
                 <td>
-                  <span class="badge badge-active">ACTIVE</span>
+                  <button class="btn btn-outline btn-sm" onclick="AdminApp.openCustomerDetailModal({{ ord.user_id }})" title="View Customer Details">
+                    <i class="bi bi-person-bounding-box"></i> Details
+                  </button>
                 </td>
               </tr>
               {% endfor %}
@@ -320,11 +334,11 @@
       <div id="tabUsers" class="tab-section" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
           <div>
-            <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--text-main);">Registered Customers</h2>
-            <p style="color: var(--text-muted); font-size: 0.85rem;">All registered users and new incoming signups on your platform</p>
+            <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--text-main);">Customer Management</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Registered customers, login activity tracking, and order history</p>
           </div>
           <div style="font-size: 0.88rem; font-weight: 700; background: var(--bg-card); padding: 0.6rem 1.2rem; border-radius: var(--radius-md); border: 1px solid var(--border-light); display: flex; align-items: center; gap: 0.5rem;">
-            <i class="bi bi-person-fill" style="color: var(--color-brand);"></i> Total Registered Users: <span style="color: var(--color-brand); font-weight: 800; font-size: 1.05rem;">{{ users|length if users else 0 }}</span>
+            <i class="bi bi-people-fill" style="color: var(--color-brand);"></i> Total Registered Customers: <span style="color: var(--color-brand); font-weight: 800; font-size: 1.05rem;">{{ users|length if users else 0 }}</span>
           </div>
         </div>
 
@@ -334,26 +348,42 @@
               <thead>
                 <tr>
                   <th>User ID</th>
-                  <th>Customer Name</th>
-                  <th>Email & Contact</th>
-                  <th>Profile Status</th>
-                  <th>Registered On</th>
+                  <th>Customer</th>
+                  <th>Phone/Email</th>
+                  <th>Login Count</th>
                   <th>Last Login</th>
                   <th>Orders</th>
-                  <th style="text-align: right;">Total Spent</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {% if users %}
                 {% for u in users %}
-                <tr>
-                  <td><span class="badge" style="background: rgba(99,102,241,0.15); color: var(--color-brand); font-weight: 800;">#USR-{{ "%04d"|format(u.id) }}</span></td>
+                <tr style="cursor: pointer;" onclick="AdminApp.openCustomerDetailModal({{ u.id }})">
                   <td>
-                    <div style="font-weight: 700; color: var(--text-main);">{{ u.full_name if u.full_name else 'New Customer' }}</div>
+                    <button class="badge" style="background: rgba(99,102,241,0.15); color: var(--color-brand); font-weight: 800; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem;" onclick="event.stopPropagation(); AdminApp.openCustomerDetailModal({{ u.id }})" title="Click to view Customer Details">
+                      <i class="bi bi-person-vcard"></i> {{ u.user_code }}
+                    </button>
+                  </td>
+                  <td>
+                    <a href="javascript:void(0)" onclick="event.stopPropagation(); AdminApp.openCustomerDetailModal({{ u.id }})" style="font-weight: 700; color: var(--text-main); text-decoration: none;">
+                      {{ u.full_name if u.full_name else 'New Customer' }}
+                    </a>
                   </td>
                   <td>
                     <div><i class="bi bi-envelope" style="color: var(--text-dim);"></i> {{ u.email or 'N/A' }}</div>
                     {% if u.phone %}<div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 2px;"><i class="bi bi-phone"></i> {{ u.phone }}</div>{% endif %}
+                  </td>
+                  <td>
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.12); color: var(--color-success); font-weight: 800;">
+                      <i class="bi bi-box-arrow-in-right"></i> {{ u.login_count or 1 }} logins
+                    </span>
+                  </td>
+                  <td style="color: var(--text-muted); font-size: 0.82rem; white-space: nowrap;">{{ u.last_login or 'N/A' }}</td>
+                  <td>
+                    <span class="badge" style="background: var(--bg-input); font-weight: 700; color: var(--text-main);">
+                      {{ u.total_orders }} orders (₹{{ "{:,.2f}".format(u.total_spent) }})
+                    </span>
                   </td>
                   <td>
                     {% if u.is_profile_complete %}
@@ -362,15 +392,11 @@
                     <span class="badge badge-warning">Pending Details</span>
                     {% endif %}
                   </td>
-                  <td style="color: var(--text-muted); font-size: 0.82rem;">{{ u.created_at }}</td>
-                  <td style="color: var(--text-muted); font-size: 0.82rem;">{{ u.last_login or 'N/A' }}</td>
-                  <td><span class="badge" style="background: var(--bg-input); font-weight: 700; color: var(--text-main);">{{ u.total_orders }} orders</span></td>
-                  <td style="text-align: right; font-weight: 800; color: var(--color-success);">₹{{ "{:,.2f}".format(u.total_spent) }}</td>
                 </tr>
                 {% endfor %}
                 {% else %}
                 <tr>
-                  <td colspan="8" style="padding: 2.5rem; text-align: center; color: var(--text-muted);">No registered users found yet.</td>
+                  <td colspan="7" style="padding: 2.5rem; text-align: center; color: var(--text-muted);">No registered customers found yet.</td>
                 </tr>
                 {% endif %}
               </tbody>
@@ -587,6 +613,21 @@
         </div>
         <button type="submit" class="btn btn-primary btn-full">Save Coupon</button>
       </form>
+    </div>
+  </div>
+
+  <!-- View Customer Details Modal -->
+  <div id="modalCustomerDetail" class="modal-overlay">
+    <div class="modal-content" style="max-width: 850px; width: 92%; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="display: flex; align-items: center; gap: 0.5rem;">
+          <i class="bi bi-person-circle" style="color: var(--color-brand);"></i> Customer Details & Activity History
+        </h3>
+        <button onclick="AdminApp.closeModal('modalCustomerDetail')" class="modal-close">&times;</button>
+      </div>
+      <div id="customerModalBody">
+        <!-- Rendered dynamically -->
+      </div>
     </div>
   </div>
 

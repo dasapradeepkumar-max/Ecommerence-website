@@ -29,7 +29,15 @@ def checkout_page():
         return redirect(url_for("cart.cart_page"))
 
     addresses = User.get_addresses(user_id)
-    return render_template("checkout.html", cart=cart_summary, addresses=addresses, user=user)
+    shipping_date_str, delivery_date_str = Order.get_estimated_dates()
+    return render_template(
+        "checkout.html",
+        cart=cart_summary,
+        addresses=addresses,
+        user=user,
+        shipping_date=shipping_date_str,
+        delivery_date=delivery_date_str
+    )
 
 
 @order_bp.route("/api/checkout/process", methods=["POST"])

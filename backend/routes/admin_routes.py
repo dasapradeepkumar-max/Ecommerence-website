@@ -3,6 +3,7 @@ import time
 from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, flash
 from backend.models.admin import Admin
+from backend.models.user import User
 from backend.models.product import Product
 from backend.models.order import Order
 from backend.models.database import Database
@@ -65,12 +66,26 @@ def admin_dashboard():
 
 
 @admin_bp.route("/api/users", methods=["GET"])
+@admin_bp.route("/api/customers", methods=["GET"])
 def api_get_users():
     if not _is_admin():
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
     users = Admin.get_all_users()
-    return jsonify({"success": True, "users": users, "total_count": len(users)})
+    return jsonify({"success": True, "users": users, "customers": users, "total_count": len(users)})
+
+
+@admin_bp.route("/api/users/<int:user_id>", methods=["GET"])
+@admin_bp.route("/api/customers/<int:user_id>", methods=["GET"])
+def api_get_customer_detail(user_id):
+    if not _is_admin():
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+
+    detail = User.get_customer_detail(user_id)
+    if not detail:
+        return jsonify({"success": False, "message": "Customer not found."}), 404
+
+    return jsonify({"success": True, "customer": detail, "detail": detail})
 
 
 

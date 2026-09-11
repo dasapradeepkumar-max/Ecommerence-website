@@ -38,7 +38,9 @@ def verify_otp_api():
         return jsonify(verify_res), 400
 
     # User creation / fetch
-    user, is_new = User.create_or_get(identifier)
+    ip_addr = request.headers.get("X-Forwarded-For", request.remote_addr)
+    user_agent = request.headers.get("User-Agent", request.user_agent.string if request.user_agent else None)
+    user, is_new = User.create_or_get(identifier, ip_address=ip_addr, user_agent=user_agent)
     session["user_id"] = user["id"]
     session["user_identifier"] = identifier
     session["full_name"] = user.get("full_name") or "User"

@@ -46,7 +46,7 @@ class Admin:
 
     @classmethod
     def get_all_users(cls):
-        return Database.query_all(
+        users = Database.query_all(
             """
             SELECT u.*, 
                    (SELECT COUNT(*) FROM orders WHERE user_id = u.id) as total_orders,
@@ -55,12 +55,16 @@ class Admin:
             ORDER BY u.id DESC
             """
         )
+        for u in users:
+            if not u.get("user_code"):
+                u["user_code"] = f"USR-{int(u['id']):06d}"
+        return users
 
     @classmethod
     def get_all_orders(cls):
         orders = Database.query_all(
             """
-            SELECT o.*, u.full_name as customer_name, u.email as customer_email, u.phone as customer_phone,
+            SELECT o.*, u.user_code as customer_user_code, u.full_name as customer_name, u.email as customer_email, u.phone as customer_phone,
                    p.payment_method, p.payment_status, p.transaction_ref
             FROM orders o
             JOIN users u ON o.user_id = u.id
@@ -68,6 +72,9 @@ class Admin:
             ORDER BY o.id DESC
             """
         )
+        for ord_obj in orders:
+            if not ord_obj.get("customer_user_code"):
+                ord_obj["customer_user_code"] = f"USR-{int(ord_obj['user_id']):06d}"
         return orders
 
     @classmethod

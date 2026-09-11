@@ -1,5 +1,6 @@
 import random
 import time
+from datetime import datetime, timedelta
 from backend.models.database import Database
 from backend.models.cart import Cart
 from backend.models.product import Product
@@ -7,13 +8,20 @@ from backend.models.product import Product
 
 class Order:
 
-    STATUS_TIMELINE = ['Ordered', 'Confirmed', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled']
+    STATUS_TIMELINE = ['Ordered', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled']
 
     @classmethod
     def generate_order_number(cls):
         timestamp = int(time.time() * 1000)
         rand_num = random.randint(100, 999)
         return f"ORD-{timestamp}-{rand_num}"
+
+    @classmethod
+    def get_estimated_dates(cls):
+        now = datetime.now()
+        ship_date = now + timedelta(days=1)
+        delivery_date = now + timedelta(days=4)
+        return ship_date.strftime("%a, %d %b %Y"), delivery_date.strftime("%a, %d %b %Y")
 
     @classmethod
     def create_order(cls, user_id: int, address_id: int, payment_method: str, coupon_code: str = None):
@@ -31,12 +39,13 @@ class Order:
                 }
 
         order_number = cls.generate_order_number()
+        shipping_date_str, delivery_date_str = cls.get_estimated_dates()
         
         # Insert into orders table
         order_id = Database.execute(
             """
-            INSERT INTO orders (order_number, user_id, address_id, subtotal, coupon_code, coupon_discount, delivery_fee, total_amount, status)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'Ordered')
+            INSERT INTO orders (order_number, user_id, address_id, subtotal, coupon_code, coupon_discount, delivery_fee, total_amount, status, shipping_date, delivery_date)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'Ordered', %s, %s)
             """,
             (
                 order_number,
@@ -46,7 +55,9 @@ class Order:
                 cart_summary["coupon_code"],
                 cart_summary["coupon_discount"],
                 cart_summary["delivery_fee"],
-                cart_summary["final_total"]
+                cart_summary["final_total"],
+                shipping_date_str,
+                delivery_date_str
             )
         )
 
@@ -116,6 +127,10 @@ class Order:
                 if not it.get("primary_image"):
                     it["primary_image"] = "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&q=80"
             ord_obj["order_items"] = items
+            if not ord_obj.get("shipping_date") or not ord_obj.get("delivery_date"):
+                def_s, def_d = cls.get_estimated_dates()
+                ord_obj["shipping_date"] = ord_obj.get("shipping_date") or def_s
+                ord_obj["delivery_date"] = ord_obj.get("delivery_date") or def_d
             ord_obj["timeline_index"] = cls.STATUS_TIMELINE.index(ord_obj["status"]) if ord_obj["status"] in cls.STATUS_TIMELINE else 0
         return orders
 
@@ -152,6 +167,10 @@ class Order:
             if not it.get("primary_image"):
                 it["primary_image"] = "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&q=80"
         ord_obj["order_items"] = items
+        if not ord_obj.get("shipping_date") or not ord_obj.get("delivery_date"):
+            def_s, def_d = cls.get_estimated_dates()
+            ord_obj["shipping_date"] = ord_obj.get("shipping_date") or def_s
+            ord_obj["delivery_date"] = ord_obj.get("delivery_date") or def_d
         ord_obj["timeline_index"] = cls.STATUS_TIMELINE.index(ord_obj["status"]) if ord_obj["status"] in cls.STATUS_TIMELINE else 0
         return ord_obj
 
